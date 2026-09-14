@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { facilities, routes } from '../lib/data/network.ts';
-import {
-  baseline,
-  getNetworkState,
-  shanghaiClosure,
-} from '../lib/data/scenario.ts';
+import { baseline, getNetworkState } from '../lib/data/scenario.ts';
 
 test('network references are valid and all facilities participate', () => {
   const ids = new Set(facilities.map((f) => f.id));
@@ -26,19 +22,16 @@ test('closure blocks Shanghai and exposes exactly the four downstream facilities
   );
   assert.deepEqual(
     state.facilities.filter((f) => f.status === 'at risk').map((f) => f.id),
-    shanghaiClosure.atRiskFacilityIds,
+    ['la', 'ontario', 'chicago', 'ny'],
   );
   assert.equal(state.routes.filter((r) => r.status === 'blocked').length, 3);
   assert.equal(state.routes.filter((r) => r.status === 'affected').length, 3);
-  assert.equal(
-    state.kpis.facilitiesAtRisk,
-    state.facilities.filter((f) => f.status === 'at risk').length,
-  );
+  assert.equal(state.kpis.facilitiesAtRisk, state.atRiskFacilityIds.length);
   assert.deepEqual(state.kpis, {
-    serviceLevel: 84,
-    leadTime: 19,
+    serviceLevel: 89,
+    leadTime: 20,
     logisticsCost: 1480000,
-    facilitiesAtRisk: 4,
+    facilitiesAtRisk: 3,
   });
   for (const r of state.routes.filter(
     (r) => r.from === 'singapore' || r.from === 'rotterdam',
@@ -53,6 +46,10 @@ test('repeated activation and reset fully restore the baseline without mutating 
     assert.deepEqual(reset.kpis, baseline);
     assert.ok(reset.facilities.every((f) => f.status === 'operational'));
     assert.ok(reset.routes.every((r) => r.status === 'operational'));
+    assert.ok(reset.facilities.every((f) => f.impact === null));
+    assert.deepEqual(reset.atRiskFacilityIds, []);
+    assert.deepEqual(reset.blockedRouteIds, []);
+    assert.deepEqual(reset.affectedRouteIds, []);
   }
   assert.equal(JSON.stringify({ facilities, routes, baseline }), original);
 });

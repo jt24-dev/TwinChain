@@ -8,17 +8,28 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { shanghaiClosure } from '@/lib/data/scenario';
+import { MitigationControls } from './mitigation-controls';
+import type { StrategyId } from '@/lib/simulation/mitigation';
 export function ScenarioControls({
   active,
   onActivate,
   onReset,
+  blockedRouteCount,
+  atRiskCount,
+  strategy,
+  onStrategy,
 }: {
   active: boolean;
   onActivate: () => void;
   onReset: () => void;
+  blockedRouteCount: number;
+  atRiskCount: number;
+  strategy: StrategyId;
+  onStrategy: (strategy: StrategyId) => void;
 }) {
   return (
-    <aside className="scenario-panel">
+    <aside className={`scenario-panel ${active ? 'has-mitigation' : ''}`}>
       <div className="panel-eyebrow">
         <span>SCENARIO CONTROL</span>
         <span>01</span>
@@ -31,19 +42,16 @@ export function ScenarioControls({
         <span>PREDEFINED</span>
       </div>
       <h2>
-        Shanghai
-        <br />
+        Shanghai <br />
         Port Closure
       </h2>
       <p className="scenario-description">
-        A critical gateway goes offline.
-        <br />
-        See how the impact travels downstream.
+        Close a critical gateway and trace the impact downstream.
       </p>
       <div className="duration">
         <span>Disruption duration</span>
         <strong>
-          14 <span>days</span>
+          {shanghaiClosure.durationDays} <span>days</span>
         </strong>
       </div>
       <div className="scenario-scope">
@@ -74,6 +82,9 @@ export function ScenarioControls({
         <RotateCcw size={15} />
         Reset to baseline
       </Button>
+      {active && (
+        <MitigationControls selected={strategy} onSelect={onStrategy} />
+      )}
       <div
         className={`scenario-feedback ${active ? 'active' : ''}`}
         role="status"
@@ -87,15 +98,15 @@ export function ScenarioControls({
           </strong>
           <p>
             {active
-              ? '3 blocked routes. 4 downstream facilities at risk.'
-              : 'Activate the scenario to reveal network dependencies.'}
+              ? `${blockedRouteCount} blocked routes. ${atRiskCount} downstream facilities at risk.`
+              : 'Activate to reveal downstream dependencies.'}
           </p>
         </div>
       </div>
       <div className="model-note">
         <Info size={14} />
         <span>
-          Illustrative scenario. Fixed assumptions, not a live forecast.
+          Calculated from network dependencies using illustrative assumptions.
         </span>
       </div>
     </aside>

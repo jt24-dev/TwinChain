@@ -1,0 +1,3 @@
+id,source,destination,mode,transit_time,cost_per_shipment,route_capacity,shipment_frequency,reliability
+R-01,SUP-01,FAC-01,Ocean,12.5,2400,800,2,95
+R-02,FAC-01,DC-01,Truck,,,,,

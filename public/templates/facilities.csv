@@ -1,0 +1,4 @@
+id,name,type,latitude,longitude,city,region,country,capacity,current_inventory,daily_demand,utilization,replenishment_lead_time,criticality
+SUP-01,Shenzhen Supplier,Supplier,22.5431,114.0579,Shenzhen,East Asia,China,1000,4200,600,60,7,High
+FAC-01,Monterrey Factory,Factory,25.6866,-100.3161,Monterrey,North America,Mexico,,,,,,
+DC-01,Dallas Distribution Center,Distribution Center,32.7767,-96.7970,Dallas,North America,United States,,,,,,

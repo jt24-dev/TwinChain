@@ -15,8 +15,12 @@ type ModelContext = {
     options: { signal: AbortSignal },
   ) => void | Promise<void>;
 };
-export function useScenarioTools(setActive: (active: boolean) => void) {
+export function useScenarioTools(
+  setActive: (active: boolean) => void,
+  enabled = true,
+) {
   useEffect(() => {
+    if (!enabled) return;
     const context = (document as Document & { modelContext?: ModelContext })
       .modelContext;
     if (!context?.registerTool) return;
@@ -67,5 +71,5 @@ export function useScenarioTools(setActive: (active: boolean) => void) {
       console.warn('Scenario tool registration unavailable', error);
     }
     return () => lifecycle.abort();
-  }, [setActive]);
+  }, [setActive, enabled]);
 }

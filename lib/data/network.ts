@@ -1,3 +1,4 @@
+import type { FacilityOperations, RouteOperations } from '../operations.ts';
 export type FacilityType =
   | 'Supplier'
   | 'Factory'
@@ -5,7 +6,7 @@ export type FacilityType =
   | 'Distribution center'
   | 'Customer market';
 export type FacilityStatus = 'operational' | 'disrupted' | 'at risk';
-export interface Facility {
+export interface Facility extends FacilityOperations {
   id: string;
   name: string;
   city: string;
@@ -13,14 +14,16 @@ export interface Facility {
   latitude: number;
   longitude: number;
   region: string;
+  country?: string;
   status: FacilityStatus;
   labelOffset?: [number, number];
 }
-export interface Route {
+export interface Route extends RouteOperations {
   id: string;
+  // Direction of goods flow: from (source) → to (destination).
   from: string;
   to: string;
-  mode: 'Ocean' | 'Road' | 'Feeder';
+  mode: 'Ocean' | 'Road' | 'Feeder' | 'Truck' | 'Rail' | 'Air';
 }
 export const facilities: Facility[] = [
   {
@@ -91,6 +94,9 @@ export const facilities: Facility[] = [
   },
   {
     id: 'la',
+    // Illustrative aggregate buffers for the inventory demo, not real port data.
+    currentInventory: 4000,
+    dailyDemand: 1000,
     name: 'Port of Los Angeles',
     city: 'Los Angeles',
     type: 'Port',
@@ -113,6 +119,8 @@ export const facilities: Facility[] = [
   },
   {
     id: 'ontario',
+    currentInventory: 7200,
+    dailyDemand: 800,
     name: 'Ontario Distribution Center',
     city: 'Ontario',
     type: 'Distribution center',
@@ -124,6 +132,8 @@ export const facilities: Facility[] = [
   },
   {
     id: 'chicago',
+    currentInventory: 10000,
+    dailyDemand: 500,
     name: 'Chicago Distribution Center',
     city: 'Chicago',
     type: 'Distribution center',
