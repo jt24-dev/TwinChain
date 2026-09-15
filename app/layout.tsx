@@ -13,19 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TwinChain · Supply Chain Resilience Simulator',
+  title: 'TwinChain — Supply Chain Resilience Intelligence',
   icons: { icon: '/favicon.svg' },
   description:
-    'Build, visualize, and stress-test supply chain networks. Explore downstream disruption, inventory buffers, projected stockouts, and business impact.',
+    'Build, import, and stress-test supply chain networks with disruption simulation, inventory analysis, and downstream impact modeling.',
   openGraph: {
-    title: 'TwinChain · Supply Chain Resilience Simulator',
+    title: 'TwinChain — Supply Chain Resilience Intelligence',
     description:
       'Build or import a network. Simulate disruption. Understand inventory buffers, stockouts, and business impact.',
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'TwinChain · Supply Chain Resilience Simulator',
+    title: 'TwinChain — Supply Chain Resilience Intelligence',
     description: 'Build, visualize, and stress-test supply chain networks.',
   },
 };

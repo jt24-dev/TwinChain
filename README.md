@@ -1,6 +1,14 @@
-# TwinChain · v0.11
+# TwinChain · v0.12A
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.12A homepage and product navigation
+
+TwinChain’s positioning is **Supply Chain Resilience Intelligence**. The homepage introduces the product with a still view of the real Shanghai Demo result, direct Demo/Build/Import actions, saved-network continuation, four capability sections, a three-step workflow, and use cases. Product and How It Works links navigate within the homepage; About and Methodology open the existing model explanation. Open App returns to the current workspace, while returning sessions retain their existing workspace entry behavior.
+
+The preview reuses the geographic projection, country geometry, route renderer, and calculated Demo state; it contains no invented business results or continuous animation. Navy, mint, and the existing Geist font and network mark remain the brand foundation. Homepage spacing, buttons, borders, and type hierarchy are scoped to the entry experience. No new dependencies or simulation changes. Pricing, payment, accounts, and cloud persistence remain deferred. The displayed milestone is v0.12A; the package version is 0.12.0.
+
+Validation: TypeScript and all 129 existing tests pass; the production build succeeds with the existing chunk-size and dependency deprecation warnings. Five targeted browser checks covered the laptop homepage, Demo entry, Build and saved-network continuation, Import entry/cancellation, and responsive Home/navigation including methodology and Open App. No console errors or horizontal overflow were observed at 1366, 1440, 1536, 1024, or 390 CSS-pixel widths. No simulation changes or new visual snapshot tests were needed.
 
 ## v0.11 map and geospatial experience
 
