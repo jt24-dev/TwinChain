@@ -1,9 +1,9 @@
 'use client';
-import { memo, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Globe2, Plus, Minus, Scan, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { landPaths } from '@/lib/data/land';
+import { Geography, BasemapLabels } from './basemap';
 import type { NetworkView } from '@/lib/networks';
 import type { NetworkBuilder } from '@/lib/use-network-builder';
 import { facilityPoint, coordinatesAtPoint } from '@/lib/map-projection';
@@ -21,47 +21,6 @@ import { MapLegend } from './map-legend';
 import { FacilityDetails } from './facility-details';
 import { RouteDetails } from './route-details';
 
-const Geography = memo(function Geography() {
-  return (
-    <>
-      <rect width="1100" height="500" fill="url(#ocean)" />
-      <rect width="1100" height="500" fill="url(#grid)" />
-      <g fill="#263742" stroke="#344753" strokeWidth=".6">
-        {landPaths.map((d, i) => (
-          <path key={i} d={d} />
-        ))}
-      </g>
-      <g className="continent-label">
-        <text x="110" y="165">
-          EUROPE
-        </text>
-        <text x="170" y="322">
-          AFRICA
-        </text>
-        <text x="438" y="142">
-          ASIA
-        </text>
-        <text x="635" y="404">
-          OCEANIA
-        </text>
-        <text x="880" y="164">
-          NORTH AMERICA
-        </text>
-        <text x="999" y="379">
-          SOUTH AMERICA
-        </text>
-      </g>
-      <g className="ocean-label">
-        <text x="675" y="256">
-          PACIFIC OCEAN
-        </text>
-        <text x="310" y="391">
-          INDIAN OCEAN
-        </text>
-      </g>
-    </>
-  );
-});
 export function NetworkMap({
   state,
   name = 'Global network',
@@ -82,6 +41,12 @@ export function NetworkMap({
   const selected = selectedId === undefined ? localSelected : selectedId;
   const setSelected = onSelectionChange ?? setLocalSelected;
   const [paused, setPaused] = useState(false);
+  const [placementPreview, setPlacementPreview] = useState<{
+    x: number;
+    y: number;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [routeSelection, setRouteSelection] = useState<string | null>(null);
   const selectedRoute = !selected
     ? state.routes.find((r) => r.id === routeSelection)
@@ -95,7 +60,8 @@ export function NetworkMap({
     dragging,
     setCamera,
     handlers,
-  } = useMapCamera(!demoLayout);
+    fit,
+  } = useMapCamera(state.facilities);
   const placementPointer = useRef<{
     x: number;
     y: number;
@@ -135,7 +101,7 @@ export function NetworkMap({
       </div>
       <div
         ref={viewport}
-        className={`map-canvas interactive-map ${dragging ? 'dragging' : ''} ${paused ? 'flow-paused' : ''} ${builder?.placing ? 'placing-facility' : ''}`}
+        className={`map-canvas interactive-map ${state.routes.length > 200 ? 'dense-network' : ''} ${dragging ? 'dragging' : ''} ${paused ? 'flow-paused' : ''} ${builder?.placing ? 'placing-facility' : ''}`}
         tabIndex={0}
         role="region"
         aria-label="Interactive network map"
@@ -144,11 +110,15 @@ export function NetworkMap({
         data-pan-x={camera.x.toFixed(2)}
         data-pan-y={camera.y.toFixed(2)}
         {...handlers}
+        onPointerLeave={() => setPlacementPreview(null)}
+        onWheelCapture={() => {
+          if (placementPointer.current) placementPointer.current.moved = true;
+        }}
         onPointerDown={(event) => {
           if (
             builder?.placing &&
             event.button === 0 &&
-            !(event.target as Element).closest('button,[data-route-hit]')
+            !(event.target as Element).closest('button,a,[data-route-hit]')
           ) {
             if (placementPointer.current) placementPointer.current.moved = true;
             else
@@ -162,6 +132,13 @@ export function NetworkMap({
           handlers.onPointerDown(event);
         }}
         onPointerMove={(event) => {
+          if (builder?.placing) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = event.clientX - rect.left,
+              y = event.clientY - rect.top;
+            const coordinate = coordinatesAtPoint(x, y, scale, translate);
+            setPlacementPreview(coordinate ? { x, y, ...coordinate } : null);
+          }
           const p = placementPointer.current;
           if (p && Math.hypot(event.clientX - p.x, event.clientY - p.y) > 5)
             p.moved = true;
@@ -229,12 +206,12 @@ export function NetworkMap({
             </marker>
             <pattern
               id="grid"
-              width="91.66"
-              height="89.28"
+              width="91.6667"
+              height="91.6667"
               patternUnits="userSpaceOnUse"
             >
               <path
-                d="M 91.66 0 L 0 0 0 89.28"
+                d="M 91.6667 0 L 0 0 0 91.6667"
                 fill="none"
                 stroke="#233340"
                 strokeWidth=".7"
@@ -266,6 +243,13 @@ export function NetworkMap({
               selectedRoute={builder?.route?.id ?? selectedRoute?.id}
             />
           </g>
+          <BasemapLabels
+            scale={scale}
+            translate={translate}
+            size={size}
+            zoom={camera.zoom}
+            facilities={state.facilities}
+          />
         </svg>
         <TooltipProvider delay={160}>
           {state.facilities.map((f) => {
@@ -276,6 +260,7 @@ export function NetworkMap({
               <FacilityMarker
                 key={f.id}
                 facility={f}
+                showLabel={camera.zoom >= 4 || f.status === 'disrupted'}
                 x={screenX}
                 y={screenY}
                 selected={
@@ -304,7 +289,7 @@ export function NetworkMap({
                       constrainCamera({
                         ...current,
                         x: (550 - x) * current.zoom,
-                        y: (250 - y) * current.zoom,
+                        y: (275 - y) * current.zoom,
                       }),
                     );
                 }}
@@ -312,6 +297,19 @@ export function NetworkMap({
             );
           })}
         </TooltipProvider>
+        {builder?.placing && placementPreview && (
+          <div
+            className="placement-preview"
+            style={{ left: placementPreview.x, top: placementPreview.y }}
+            aria-hidden="true"
+          >
+            <span>+</span>
+            <small>
+              {placementPreview.latitude.toFixed(3)}°,{' '}
+              {placementPreview.longitude.toFixed(3)}°
+            </small>
+          </div>
+        )}
         {state.facilities.length === 0 && !builder?.placing && (
           <div className="network-empty">
             <strong>Build your supply chain</strong>
@@ -352,13 +350,22 @@ export function NetworkMap({
           >
             <Minus size={17} />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Show world"
+            title="Show world"
+            onClick={() => setCamera(FIT_CAMERA)}
+          >
+            <Globe2 size={17} />
+          </Button>
           <span className="control-divider" />
           <Button
             variant="ghost"
             size="icon"
             aria-label="Fit network"
             title="Fit network (0)"
-            onClick={() => setCamera(FIT_CAMERA)}
+            onClick={fit}
           >
             <Scan size={17} />
           </Button>
@@ -373,7 +380,14 @@ export function NetworkMap({
           {paused ? <Play size={13} /> : <Pause size={13} />}
           <span>{paused ? 'Flow paused' : 'Network flow'}</span>
         </Button>
-        <span className="map-attribution">Natural Earth</span>
+        <a
+          className="map-attribution"
+          href="https://www.naturalearthdata.com/about/terms-of-use/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Natural Earth · public domain
+        </a>
       </div>
       <div className="map-help" id="map-help">
         Scroll to zoom · Drag to pan · Select to inspect

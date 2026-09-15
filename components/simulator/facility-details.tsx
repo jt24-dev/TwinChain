@@ -53,6 +53,10 @@ export function FacilityDetails({
             </span>
           </div>
           <OperationsDetails kind="facility" data={facility} />
+          <p className="coordinate-context">
+            {facility.latitude.toFixed(4)}° latitude ·{' '}
+            {facility.longitude.toFixed(4)}° longitude
+          </p>
           <InventoryDetails facility={facility} />
           <p>
             {!active

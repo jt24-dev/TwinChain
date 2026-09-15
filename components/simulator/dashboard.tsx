@@ -104,8 +104,8 @@ export function Dashboard() {
             <Network size={23} />
           </div>
           <div>
-            <h1>Supply Chain Resilience Simulator</h1>
-            <p>Global Network Digital Twin</p>
+            <h1>TwinChain</h1>
+            <p>Supply Chain Resilience Simulator</p>
           </div>
         </div>
         <div className="header-meta">
@@ -125,7 +125,7 @@ export function Dashboard() {
           <Button variant="ghost" onClick={() => setAbout(true)}>
             About
           </Button>
-          <span className="version">v0.10</span>
+          <span className="version">v0.11</span>
         </div>
       </header>
       {!library.ready ? (

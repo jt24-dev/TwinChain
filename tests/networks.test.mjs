@@ -257,5 +257,5 @@ test('custom facilities never inherit demo offsets, even with a matching ID', ()
     facilityPoint(f),
     projectCoordinates(f.latitude, f.longitude),
   );
-  assert.notDeepEqual(facilityPoint(f, true), facilityPoint(f));
+  assert.deepEqual(facilityPoint(f, true), facilityPoint(f));
 });

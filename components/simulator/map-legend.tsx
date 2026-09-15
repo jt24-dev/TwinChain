@@ -9,6 +9,13 @@ export function MapLegend({
 }) {
   return (
     <div className="map-legend complete-legend" aria-label="Map legend">
+      <details className="transport-key">
+        <summary>Transport lanes</summary>
+        <span>
+          Curved: ocean / feeder / air · Solid: road / truck · Patterned: rail.
+          Schematic, not navigable routes.
+        </span>
+      </details>
       <div className="legend-types">
         <strong>FACILITIES</strong>
         {Object.entries(typeIcons).map(([type, Icon]) => (

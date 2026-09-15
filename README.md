@@ -1,6 +1,22 @@
-# Supply Chain Resilience Simulator · v0.10
+# TwinChain · v0.11
 
-Supply Chain Resilience Simulator is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.11 map and geospatial experience
+
+The map retains the SVG/HTML architecture, with a shared full-latitude, Pacific-centered plate carrée projection (1100 × 550 world units, seam at 30°W). It can support local vector overlays without WebGL or a tile service. The prior positional error was **deliberate Demo marker offsets**, amplified by zoom; those also displaced route endpoints. The old display cropped latitudes to 80°N–60°S. Markers and routes now use unmodified coordinates in every network; no source Demo coordinate changes or storage migration were needed. This is a flat geographic projection, not a globe or distance-preserving navigation chart.
+
+**Basemap:** bundled Natural Earth 1:50m Admin 0 countries (242 countries/territories in this source) and 1:110m populated places (243 places). Coastlines and national boundaries are visible. Country labels become denser at regional zoom; city labels begin at 3×. Labels are screen-sized and omitted when they collide with facilities or other labels. The static paths are memoized. No tile requests, API key, geocoder, or recurring map cost is required; after app assets load, the map has no external basemap failure mode.
+
+**Markers and lanes:** constant-size facility glyphs retain type/risk/selection styling. Distinct ! and ✓ badges show stockout and protection even when labels are hidden. Selected/hovered/focused facility labels remain visible; all facility labels appear at 4×. Co-located facilities stay co-located: zoom or use keyboard focus to inspect them. Ocean/feeder/air lanes use sampled great-circle curves; road/truck/rail lanes use schematic interpolated segments. Seam crossings are split instead of drawing across the world. Rail and air have subtle patterns; blocked lanes stop movement, and mitigation lanes keep their existing styling. These are not sea corridors, turn-by-turn roads or navigable routes; geodesic ocean arcs may cross land.
+
+**Camera and placement:** zoom spans 1–24×. Fit Network calculates bounds with padding, caps tight-network fits at 16×, and uses 8× for a single facility. A new network fits automatically; simulation reset and mode changes preserve the camera. Show World provides an overview. Build placement and its cursor preview use the exact inverse projection and show coordinates; drag/pinch gestures cancel placement. Descriptive location metadata stays editable; automatic country inference/reverse geocoding is deferred. Networks spanning the Atlantic map seam may fit to a broad world view rather than the shortest wrapped extent.
+
+**Performance and compatibility:** route geometry is memoized; animation is disabled above 200 routes. The bundled geographic asset is about 1.6 MB before compression. This is designed for typical networks and hundreds of entities; complex clustering, spatial indexing, tile-level detail and very large network rendering remain future work. CSV, Excel, JSON backup and localStorage schemas are unchanged; simulation outputs are consumed without business-logic changes. Vercel/static hosting serves the same compiled assets from `dist/client`; no new environment settings are required.
+
+Data sources: [Natural Earth country data](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_0_countries.geojson), [populated places](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_populated_places.geojson), and [public-domain terms](https://www.naturalearthdata.com/about/terms-of-use/). Natural Earth uses de facto boundaries; these are cartographic context, not a statement on disputed sovereignty. Visible attribution is retained as good practice. `scripts/build-geography.py` regenerates clipped local paths from those two downloaded GeoJSON inputs using Python's standard library; the deployed browser never runs that script. Country input SHA256: `3e458fc036ad0a66411f2c1e6cac49c5d7bfb81cb1123bc513b22511a2b7fdeb`.
+
+Thirteen geospatial tests supplement the existing 116 (updating two obsolete camera/offset expectations): six-continent and polar round trips, known anchors, longitude wrapping, route seams and endpoints, degenerate routes, network fits, bundled geography, backup compatibility and unchanged simulation outputs. Total: 129 tests.
 
 ## Start here
 
@@ -159,9 +175,9 @@ React + TypeScript, Vite through the Sites Vinext scaffold. The production appli
 
 This is a deterministic visual demonstration with a simplified aggregate inventory model, not a prediction or planning system. KPI values are illustrative scenario-period outcomes, not forecasts. At-risk facilities exclude the closed source itself. In the Shanghai scenario, upstream suppliers and factories retain normal status even when a connection into Shanghai is blocked. Singapore's separate Europe and Oceania flows remain operational.
 
-Routes are schematic connections, not navigable maritime paths. Nearby markers have small display offsets to remain distinguishable. The map uses a Pacific-centered equirectangular projection. No individual shipments, automatic routing, historical data, or day-by-day inventory simulation are included.
+Routes are schematic connections, not navigable maritime paths. Markers use exact coordinates; only labels have display offsets. The map uses a Pacific-centered equirectangular projection. No individual shipments, automatic routing, historical data, or day-by-day inventory simulation are included.
 
-Land outlines: [Natural Earth 1:110m land](https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/), public domain. `lib/data/land.ts` contains projected paths from the bundled `public/land.geojson` source.
+The current basemap is `lib/data/geography.json`, generated as described above. The older `lib/data/land.ts` and `public/land.geojson` remain as historical source assets and are no longer rendered.
 
 Tests cover camera bounds, network integrity, downstream discovery, severity and delays, route blocking, independent flows, cycles/converging paths, network edits, duration changes, KPI formulas, invalid inputs, immutability, and baseline reset.
 

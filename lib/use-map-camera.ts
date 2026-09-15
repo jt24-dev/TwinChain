@@ -12,39 +12,49 @@ import {
   zoomCamera,
   type Camera,
 } from './map-camera';
+import { fitNetworkCamera } from './map-camera';
+import { MAP_WIDTH, MAP_HEIGHT } from './map-projection';
+import type { Facility } from './data/network';
 
-export function useMapCamera(fullWorld = false) {
+export function useMapCamera(facilities: readonly Facility[]) {
   const viewport = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 1100, height: 500 });
+  const [size, setSize] = useState({ width: MAP_WIDTH, height: MAP_HEIGHT });
+  const [measured, setMeasured] = useState(false);
+  const initialFit = useRef(false);
   const [camera, setCamera] = useState<Camera>(FIT_CAMERA);
   const [dragging, setDragging] = useState(false);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const base = Math.min(
-    size.width / 1100,
-    size.height / (fullWorld ? 500 : 400),
-  );
+  const base = Math.min(size.width / MAP_WIDTH, size.height / MAP_HEIGHT);
   const scale = base * camera.zoom;
   const translate = {
-    x: (size.width - 1100 * scale) / 2 + base * camera.x,
-    y: (size.height - 500 * scale) / 2 + base * camera.y,
+    x: (size.width - MAP_WIDTH * scale) / 2 + base * camera.x,
+    y: (size.height - MAP_HEIGHT * scale) / 2 + base * camera.y,
   };
   useEffect(() => {
     const element = viewport.current;
     if (!element) return;
-    const observer = new ResizeObserver(([entry]) =>
+    const observer = new ResizeObserver(([entry]) => {
+      setMeasured(true);
       setSize({
         width: entry.contentRect.width,
         height: entry.contentRect.height,
-      }),
-    );
+      });
+    });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  const fit = () =>
+    setCamera(fitNetworkCamera(facilities, size.width, size.height));
+  useEffect(() => {
+    if (!measured || initialFit.current) return;
+    initialFit.current = true;
+    setCamera(fitNetworkCamera(facilities, size.width, size.height));
+  }, [measured, facilities, size]);
   useEffect(() => {
     const element = viewport.current;
     if (!element) return;
     const wheel = (event: WheelEvent) => {
-      if ((event.target as HTMLElement).closest('button')) return;
+      if ((event.target as HTMLElement).closest('button, a')) return;
       event.preventDefault();
       const rect = element.getBoundingClientRect();
       const delta =
@@ -67,7 +77,7 @@ export function useMapCamera(fullWorld = false) {
   }, [base, size]);
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (
-      (event.target as HTMLElement).closest('button, [data-route-hit]') ||
+      (event.target as HTMLElement).closest('button, a, [data-route-hit]') ||
       (event.pointerType === 'mouse' && event.button !== 0)
     )
       return;
@@ -150,7 +160,7 @@ export function useMapCamera(fullWorld = false) {
       setCamera((current) => zoomCamera(current, current.zoom * 1.25));
     if (event.key === '-')
       setCamera((current) => zoomCamera(current, current.zoom / 1.25));
-    if (event.key === '0' || event.key === 'Home') setCamera(FIT_CAMERA);
+    if (event.key === '0' || event.key === 'Home') fit();
     const movement: Record<string, [number, number]> = {
       ArrowUp: [0, 50],
       ArrowDown: [0, -50],
@@ -175,6 +185,7 @@ export function useMapCamera(fullWorld = false) {
     translate,
     dragging,
     setCamera,
+    fit,
     handlers: {
       onPointerDown,
       onPointerMove,

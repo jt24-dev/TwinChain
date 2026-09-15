@@ -15,11 +15,11 @@ test('zoom preserves the world point under the pointer', () => {
   );
 });
 test('zoom and drag stay bounded and fit returns the original camera', () => {
-  assert.equal(zoomCamera(FIT_CAMERA, 20).zoom, 4);
+  assert.equal(zoomCamera(FIT_CAMERA, 30).zoom, 24);
   assert.deepEqual(zoomCamera({ zoom: 3, x: 300, y: 200 }, 0.1), FIT_CAMERA);
   assert.deepEqual(constrainCamera({ zoom: 2, x: 100000, y: -100000 }), {
     zoom: 2,
     x: 550,
-    y: -250,
+    y: -275,
   });
 });

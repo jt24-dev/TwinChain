@@ -2539,3 +2539,135 @@ select:focus-visible {
   height: auto;
   min-height: 36px;
 }
+
+/* v0.11: exact geographic anchors, constant-size symbols and a restrained national basemap. */
+.country-geography path {
+  fill: #20323e;
+  stroke: #526b79;
+  stroke-width: 0.65;
+  vector-effect: non-scaling-stroke;
+}
+.basemap-labels {
+  pointer-events: none;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: #10212b;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.country-label {
+  font-size: 11px;
+  fill: #9cb0bd;
+  letter-spacing: 0.065em;
+}
+.place-label {
+  font-size: 11px;
+  fill: #869eae;
+}
+.interactive-map .facility {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #060d16aa;
+}
+.interactive-map .facility .facility-label {
+  display: none;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #10202deb;
+  font-size: 12px;
+}
+.interactive-map .facility.label-visible .facility-label,
+.interactive-map .facility.selected .facility-label,
+.interactive-map .facility:hover .facility-label,
+.interactive-map .facility:focus-visible .facility-label {
+  display: block;
+}
+.interactive-map .facility:hover,
+.interactive-map .facility:focus-visible {
+  z-index: 8;
+}
+.marker-outcome {
+  position: absolute;
+  right: -7px;
+  top: -9px;
+  border-radius: 50%;
+  height: 16px;
+  min-width: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 800;
+  color: #12212c;
+  border: 1px solid #15222d;
+}
+.marker-outcome.stockout {
+  background: #ff9b88;
+}
+.marker-outcome.protected {
+  background: #8ed7c9;
+}
+[data-transport-mode='Rail'] .route.operational {
+  stroke-dasharray: 8 3 2 3;
+}
+[data-transport-mode='Air'] .route.operational {
+  stroke: #b8cefb;
+  stroke-dasharray: 5 4;
+}
+.route {
+  vector-effect: non-scaling-stroke;
+}
+.transport-key {
+  font-size: 12px;
+  color: #a9bdc9;
+}
+.transport-key summary {
+  cursor: pointer;
+}
+.transport-key span {
+  display: block;
+  margin-top: 8px;
+}
+.map-attribution {
+  z-index: 9;
+  color: #a3b5bf;
+  font-size: 10px;
+  pointer-events: auto;
+}
+.coordinate-context {
+  font-variant-numeric: tabular-nums;
+}
+.interactive-map .map-controls {
+  z-index: 10;
+}
+.interactive-map .map-controls button {
+  flex-shrink: 0;
+}
+.placement-preview {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9;
+  transform: translate(-50%, -50%);
+  color: #b9f7e8;
+  text-align: center;
+}
+.placement-preview > span {
+  display: block;
+  border: 1px dashed #b9f7e8;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  background: #10202dcc;
+}
+.placement-preview small {
+  position: absolute;
+  left: 22px;
+  top: 25px;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: #10202ded;
+}
+.dense-network .route-flow {
+  display: none;
+}

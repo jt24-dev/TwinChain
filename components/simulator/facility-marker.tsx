@@ -31,6 +31,7 @@ export function FacilityMarker({
   selected,
   onSelect,
   onFocus,
+  showLabel = false,
 }: {
   facility: ImpactedFacility;
   x: number;
@@ -38,6 +39,7 @@ export function FacilityMarker({
   selected: boolean;
   onSelect: () => void;
   onFocus: () => void;
+  showLabel?: boolean;
 }) {
   const Icon = typeIcons[f.type];
   const color =
@@ -49,7 +51,7 @@ export function FacilityMarker({
     <Tooltip>
       <TooltipTrigger
         render={<button type="button" />}
-        className={`facility ${f.status.replace(' ', '-')} ${f.impact ? `risk-${f.impact.severity}` : ''} ${f.mitigation?.emergencyProtection ? 'emergency-protected' : ''} ${selected ? 'selected' : ''}`}
+        className={`facility ${showLabel ? 'label-visible' : ''} ${f.status.replace(' ', '-')} ${f.impact ? `risk-${f.impact.severity}` : ''} ${f.mitigation?.emergencyProtection ? 'emergency-protected' : ''} ${selected ? 'selected' : ''}`}
         style={
           { left: x, top: y, '--node-color': color } as React.CSSProperties
         }
@@ -62,6 +64,16 @@ export function FacilityMarker({
         data-inventory={f.inventory?.state}
       >
         <Icon size={14} />
+        {f.inventory?.state === 'stockout' && (
+          <span className="marker-outcome stockout" aria-hidden="true">
+            !
+          </span>
+        )}
+        {f.inventory?.state === 'protected' && (
+          <span className="marker-outcome protected" aria-hidden="true">
+            ✓
+          </span>
+        )}
         <span
           className={`facility-label ${dx < 0 ? 'label-left' : dx > 15 ? 'label-right' : ''}`}
           style={
