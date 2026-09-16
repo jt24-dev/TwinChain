@@ -3639,3 +3639,41 @@ html {
     flex-wrap: wrap;
   }
 }
+.custom-mitigation {
+  border: 1px solid #34434e;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 18px;
+  background: #152630;
+}
+.custom-mitigation h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.custom-mitigation p {
+  color: #b1c1cb;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+.custom-mitigation .builder-field {
+  max-width: 650px;
+  margin: 12px 0;
+}
+.custom-mitigation table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.custom-mitigation th,
+.custom-mitigation td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #34434e;
+}
+.custom-mitigation caption {
+  text-align: left;
+  color: #b1c1cb;
+  padding: 18px 0 10px;
+}

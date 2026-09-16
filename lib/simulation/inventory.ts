@@ -126,10 +126,15 @@ export function applyInventoryImpact(
   const facilities = result.facilities.map((f) => {
     if (!f.impact || f.impact.hops === 0) return f;
     const supply =
-      f.mitigation &&
-      (f.mitigation.emergencyProtection || f.impact.severity === 'normal')
-        ? { supplyAvailability: 1, supplyBasis: 'mitigation' as const }
-        : calculateSupplyAvailability(inbound.get(f.id) ?? []);
+      f.mitigation?.supplyAvailability !== undefined
+        ? {
+            supplyAvailability: f.mitigation.supplyAvailability,
+            supplyBasis: 'mitigation' as const,
+          }
+        : f.mitigation &&
+            (f.mitigation.emergencyProtection || f.impact.severity === 'normal')
+          ? { supplyAvailability: 1, supplyBasis: 'mitigation' as const }
+          : calculateSupplyAvailability(inbound.get(f.id) ?? []);
     return {
       ...f,
       inventory: calculateInventoryImpact(f, durationDays, supply),

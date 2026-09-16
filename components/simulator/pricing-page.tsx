@@ -29,8 +29,8 @@ const comparison = [
       ],
       [
         'Mitigation comparison',
-        'Demo Network only',
-        'Custom mitigation planned',
+        'Demo + targeted Custom responses',
+        'Further mitigation planned',
       ],
       ['Saved scenario history', 'Not available', 'Planned'],
     ],
@@ -98,7 +98,7 @@ export function PricingPage() {
                 'Inventory depletion and projected stockouts',
                 'Operational facility and route data',
                 'Local browser saving',
-                'Demo mitigation comparison',
+                'Demo and targeted Custom mitigation comparison',
               ].map((item) => (
                 <li key={item}>
                   <Check aria-hidden="true" />

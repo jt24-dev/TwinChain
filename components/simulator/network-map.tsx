@@ -91,7 +91,9 @@ export function NetworkMap({
           <h2>{name}</h2>
           <span className="map-count">
             {state.facilities.length} facilities · {state.routes.length} routes
-            {state.routes.some((r) => r.alternate) ? ' (2 alternate)' : ''}
+            {state.routes.some((r) => r.alternate)
+              ? ` (${state.routes.filter((r) => r.alternate).length} alternate)`
+              : ''}
           </span>
         </div>
         <span className={`map-live ${active ? 'disruption-live' : ''}`}>

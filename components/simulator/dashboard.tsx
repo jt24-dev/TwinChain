@@ -16,6 +16,11 @@ import { useScenarioTools } from '@/lib/use-scenario-tools';
 import type { StrategyId } from '@/lib/simulation/mitigation';
 import { StrategyComparison } from './strategy-comparison';
 import { MitigationControls } from './mitigation-controls';
+import { CustomMitigationControls } from './custom-mitigation-controls';
+import {
+  applyCustomMitigation,
+  type CustomMitigation,
+} from '@/lib/simulation/custom-mitigation';
 import { useNetworks } from '@/lib/use-networks';
 import { useNetworkBuilder } from '@/lib/use-network-builder';
 import { normalNetworkView } from '@/lib/networks';
@@ -69,12 +74,18 @@ export function Dashboard() {
   );
   const [active, setActive] = useState(false);
   const [customSelected, setCustomSelected] = useState<string | null>(null);
-  const [shutdown, setShutdown] = useState<FacilityShutdown | null>(null);
+  const [shutdown, setShutdown] = useState<
+    (FacilityShutdown & { networkId: string }) | null
+  >(null);
   const [strategy, setStrategy] = useState<StrategyId>('do-nothing');
+  const [customChoice, setCustomChoice] = useState<CustomMitigation>({
+    id: 'do-nothing',
+  });
   const setDisruption = useCallback((next: boolean) => {
     setActive(next);
     setShutdown(null);
     setStrategy('do-nothing');
+    setCustomChoice({ id: 'do-nothing' });
   }, []);
   useEffect(() => {
     setDisruption(false);
@@ -121,12 +132,19 @@ export function Dashboard() {
     () => customBaselineState(network.facilities, network.routes),
     [network],
   );
-  const customSimulation = useMemo(
+  const customDisruption = useMemo(
     () =>
-      shutdown && network.kind === 'custom' && mode === 'simulate'
+      shutdown &&
+      shutdown.networkId === network.id &&
+      network.kind === 'custom' &&
+      mode === 'simulate'
         ? runFacilityShutdown(network.facilities, network.routes, shutdown)
         : customBase,
     [network, shutdown, mode, customBase],
+  );
+  const customSimulation = useMemo(
+    () => applyCustomMitigation(customDisruption, customChoice),
+    [customDisruption, customChoice],
   );
   const state =
     mode === 'build'
@@ -444,8 +462,14 @@ export function Dashboard() {
                 onSelect={setCustomSelected}
                 result={customSimulation}
                 running={shutdown}
-                onRun={setShutdown}
-                onReset={() => setShutdown(null)}
+                onRun={(next) => {
+                  setCustomChoice({ id: 'do-nothing' });
+                  setShutdown({ ...next, networkId: network.id });
+                }}
+                onReset={() => {
+                  setCustomChoice({ id: 'do-nothing' });
+                  setShutdown(null);
+                }}
               />
             )}
           </div>
@@ -456,6 +480,17 @@ export function Dashboard() {
             {demoSimulation && active && (
               <MitigationControls selected={strategy} onSelect={setStrategy} />
             )}
+            {mode === 'simulate' &&
+              network.kind === 'custom' &&
+              customDisruption.active && (
+                <CustomMitigationControls
+                  key={`${network.id}-${shutdown?.facilityId}-${shutdown?.durationDays}`}
+                  original={customDisruption}
+                  result={customSimulation}
+                  choice={customChoice}
+                  onApply={setCustomChoice}
+                />
+              )}
             {mode === 'simulate' && !state.active && (
               <p className="results-placeholder">
                 Run a disruption to explore inventory exposure and downstream
@@ -473,7 +508,7 @@ export function Dashboard() {
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.12C · Client-side demo ·
+              <span className="footer-dot" /> v0.13A · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>

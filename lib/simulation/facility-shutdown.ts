@@ -5,7 +5,7 @@ import {
   type KPIs,
   type SimulationResult,
 } from './model.ts';
-import { simulateDisruption } from './propagate-disruption.ts';
+import { simulateDisruption, calculateKpis } from './propagate-disruption.ts';
 import { applyInventoryImpact } from './inventory.ts';
 
 export interface FacilityShutdown {
@@ -79,6 +79,22 @@ export function runFacilityShutdown(
   );
   if (profile === 'demo')
     return applyInventoryImpact(result, input.durationDays, profile);
+  return calculateCustomImpact(result, input.durationDays);
+}
+
+/** Shared topology KPI + inventory pass for custom shutdowns and mitigation. */
+export function calculateCustomImpact(
+  result: SimulationResult,
+  durationDays: number,
+): SimulationResult {
+  const nodes = result.facilities,
+    routes = result.routes;
+  const topologyKpis = calculateKpis(
+    nodes,
+    result.blockedRouteIds.length,
+    result.affectedRouteIds.length,
+    durationDays,
+  );
   const base = customBaseline(nodes, routes);
   const impacted = result.facilities.filter((n) => n.impact);
   const weight = impacted.reduce(
@@ -92,7 +108,7 @@ export function runFacilityShutdown(
   // Normalize by network size: one localized shutdown has less portfolio impact in a larger network.
   const exposure = weight / (nodes.length * CUSTOM_MODEL.sourceWeight);
   const penalty =
-    (exposure * CUSTOM_MODEL.maximumServicePenalty * input.durationDays) /
+    (exposure * CUSTOM_MODEL.maximumServicePenalty * durationDays) /
     IMPACT_MODEL.referenceDurationDays;
   const meanDelay =
     impacted.reduce((sum, n) => sum + n.impact!.additionalDelayDays, 0) /
@@ -108,11 +124,11 @@ export function runFacilityShutdown(
         leadTime: Math.round(base.leadTime + meanDelay),
         logisticsCost:
           base.logisticsCost +
-          (result.kpis.logisticsCost - baseline.logisticsCost) +
-          input.durationDays * CUSTOM_MODEL.shutdownCostPerDay,
+          (topologyKpis.logisticsCost - baseline.logisticsCost) +
+          durationDays * CUSTOM_MODEL.shutdownCostPerDay,
       },
     },
-    input.durationDays,
-    profile,
+    durationDays,
+    'custom',
   );
 }

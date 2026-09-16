@@ -98,7 +98,7 @@ export function CustomShutdownControls({
         Illustrative KPIs based on network size and calculated impact. Returning
         to Build clears the shutdown.
       </p>
-      <p>Mitigation strategies are currently available on the Demo Network.</p>
+      <p>Run a shutdown to compare rerouting or emergency supply against Do Nothing in the results below the map.</p>
     </aside>
   );
 }

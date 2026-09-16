@@ -41,6 +41,7 @@ export interface ImpactedFacility extends Facility {
     name: string;
     originalDelayDays: number;
     emergencyProtection: boolean;
+    supplyAvailability?: number;
   };
 }
 export interface ImpactedRoute extends Route {

@@ -1,6 +1,18 @@
-# TwinChain · v0.12C
+# TwinChain · v0.13A
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.13A Custom Network mitigation
+
+After a Custom/imported facility shutdown, choose **Do Nothing**, **Reroute**, or **Expedite / Air Freight** in the stable results area below the map. Select targets and Apply; compare service, lead time, logistics cost, risk count and earliest stockout against the same original disruption. Switching responses never compounds benefits; reset clears all derived mitigation state without changing saved data. Demo strategies and their outputs are unchanged.
+
+Reroute selects one disrupted inbound flow and an existing healthy connection to the same destination. Its source must be unexposed, and the connection cannot introduce a cycle. There is no path search or optimization. Capacity is assumed to be comparable units/day: recovery uses spare alternate capacity after its existing demand share, capped by the selected lost flow. Missing capacity restores half that lost share. Missing demand uses 100 units/day; missing transit uses 3 days. Delay blends original delay with alternate transit, capped at the original delay. Added cost is closure days × cost per shipment × 1.5 (one incremental shipment/day; $500 fallback). An exhausted or nonexistent alternate is rejected. Existing blocked routes stay blocked; the selected alternate is highlighted.
+
+Expedite selects one exposed downstream facility, restores 80% of missing supply, retains 20% of additional delay, and adds $32 per emergency unit over the closure horizon. Missing demand uses 100 units/day. Both responses reuse the inventory depletion/stockout calculation and Custom KPI pipeline; recovery adjusts topology severity, and intervention spending is added to the original disruption cost. No stored operational values change. Missing inventory remains No Data, not claimed protection.
+
+These are illustrative Day-0 recovery assumptions, not freight quotes. Only the selected destination receives supply recovery; other downstream routes and facilities retain their original exposure. No shared-capacity allocation, multiple interventions, automatic routing, alternate suppliers, inventory transfers, all-strategy matrix, history, or optimization is included. Configurable coefficients live in `lib/simulation/custom-mitigation.ts`.
+
+Validation: TypeScript, all 148 tests (136 existing + 12 focused mitigation tests), production build and diff check pass. Four targeted browser checks covered the imported Custom Network Do Nothing baseline, valid reroute, Expedite, switching and reset. In the fixture, service improved 84% → 87%, projected stockout was prevented, and cost rose $380,000 → $390,500 (reroute) or $397,920 (Expedite). The map retained identical position/height and the console was clear. A stale Demo-only help message found in validation was corrected and the preview rebuilt. Existing build warnings remain.
 
 ## v0.12C navigation and simulator stability
 

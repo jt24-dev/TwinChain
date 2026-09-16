@@ -30,6 +30,7 @@ export function RouteDetails({
             : 'Affected'}
       </p>
       <OperationsDetails kind="route" data={route} />
+      {route.alternate && <p>Selected alternate mitigation connection</p>}
     </aside>
   );
 }
