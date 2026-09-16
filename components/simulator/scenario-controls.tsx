@@ -9,27 +9,21 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { shanghaiClosure } from '@/lib/data/scenario';
-import { MitigationControls } from './mitigation-controls';
-import type { StrategyId } from '@/lib/simulation/mitigation';
 export function ScenarioControls({
   active,
   onActivate,
   onReset,
   blockedRouteCount,
   atRiskCount,
-  strategy,
-  onStrategy,
 }: {
   active: boolean;
   onActivate: () => void;
   onReset: () => void;
   blockedRouteCount: number;
   atRiskCount: number;
-  strategy: StrategyId;
-  onStrategy: (strategy: StrategyId) => void;
 }) {
   return (
-    <aside className={`scenario-panel ${active ? 'has-mitigation' : ''}`}>
+    <aside className="scenario-panel">
       <div className="panel-eyebrow">
         <span>SCENARIO CONTROL</span>
         <span>01</span>
@@ -82,9 +76,6 @@ export function ScenarioControls({
         <RotateCcw size={15} />
         Reset to baseline
       </Button>
-      {active && (
-        <MitigationControls selected={strategy} onSelect={onStrategy} />
-      )}
       <div
         className={`scenario-feedback ${active ? 'active' : ''}`}
         role="status"

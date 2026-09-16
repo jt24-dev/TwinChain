@@ -1,6 +1,16 @@
-# TwinChain · v0.12B
+# TwinChain · v0.12C
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.12C navigation and simulator stability
+
+`/` always opens Home, including returning browsers. Open App (`?view=app`) opens a saved-network/Create/Import chooser; Try Demo (`?view=demo`) opens the built-in Demo directly. Selected networks remain in local storage; `?view=network` reopens the selected simulator on refresh. Shared headers expose Home, Pricing, About, and Workspace from the simulator, and browser Back/Forward follows entry state.
+
+Normal wheel/trackpad scrolling passes through the map. Hold Ctrl/Cmd while scrolling for intentional zoom; zoom buttons, drag, touch, keyboard and fit remain available. Ontario’s Demo source coordinates now place its distribution center in Toronto, Ontario (43.65, −79.38), retaining all route connections and operational values.
+
+KPI footers reserve space, scrollbar width stays stable, and inventory results/mitigation expand below the map instead of pushing it downward. Scenario controls retain their structure on activation/reset. Camera and selection are preserved. No simulation formulas or new scenarios were added. Package version remains 0.12.0; displayed milestone is v0.12C.
+
+Validation: 136 tests pass (four added for default/direct entry and Ontario coordinates/topology/fit), TypeScript, production build and diff checks pass. Six targeted browser checks covered Home/refresh, distinct Demo/workspace entry, shared navigation/Pricing, Ontario details, run/reset geometry, and page scrolling over the map. At 1366 CSS pixels the KPI height, map position/dimensions, zoom and pan were identical before/after run/reset. Normal wheel scrolling moved the page without zoom; zoom buttons and fit worked. No console errors. Physical trackpad pinch and Ctrl/Cmd-wheel were not separately exercised; their existing event path remains available behind the modifier guard. Existing build warnings remain.
 
 ## v0.12B pricing and product positioning
 
@@ -36,7 +46,7 @@ Thirteen geospatial tests supplement the existing 116 (updating two obsolete cam
 
 ## Start here
 
-First-time visitors can **Try Demo Network**, **Build a Network**, or **Import a Network**. Returning browsers reopen their saved workspace; **Home** returns to saved networks and entry actions. Use **About** for assumptions and privacy information. Rename Custom Networks in Build mode, export a JSON backup, or delete them with confirmation.
+The root URL opens Home for every visitor. **Try Demo Network** opens the built-in example; **Open App** opens the workspace chooser with saved networks, Create and Import actions. Home also retains Build/Import shortcuts. Use **About** for assumptions and privacy information. Rename Custom Networks in Build mode, export a JSON backup, or delete them with confirmation.
 
 All file parsing happens in the browser; imported files are not uploaded. Custom Networks live in this browser's localStorage, do not sync across devices, and may disappear when browser data is cleared. **Export Network** downloads source network metadata, facilities, routes and operational fields—never projections, camera or selection. **Import → JSON backup** validates a backup and restores it as a new Custom Network. Damaged storage is preserved; valid records remain accessible, with saving disabled until the original storage issue is resolved. Export recovered networks before clearing damaged storage or closing unsaved edits.
 

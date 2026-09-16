@@ -390,7 +390,7 @@ export function NetworkMap({
         </a>
       </div>
       <div className="map-help" id="map-help">
-        Scroll to zoom · Drag to pan · Select to inspect
+        Ctrl/Cmd + scroll to zoom · Drag to pan · Select to inspect
         <span>Keyboard: + / −, arrows, 0 to fit</span>
       </div>
       <MapLegend

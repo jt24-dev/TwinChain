@@ -10,6 +10,7 @@ export function ProductHeader({
   onOpenApp,
   ready = true,
   pricing = false,
+  workspace = false,
 }: {
   onAbout: () => void;
   onHome?: () => void;
@@ -17,8 +18,9 @@ export function ProductHeader({
   onOpenApp?: () => void;
   ready?: boolean;
   pricing?: boolean;
+  workspace?: boolean;
 }) {
-  const home = pricing ? productLinks.home : '';
+  const home = pricing || workspace ? productLinks.home : '';
   return (
     <header className="app-header home-header">
       <div className="brand">
@@ -45,6 +47,7 @@ export function ProductHeader({
         </div>
       </div>
       <nav className="home-nav" aria-label="Main navigation">
+        {workspace && <a href={productLinks.home}>Home</a>}
         <a href={`${home}#product`}>Product</a>
         <a href={`${home}#how-it-works`}>How It Works</a>
         <a
@@ -75,7 +78,8 @@ export function ProductHeader({
           onClick={onOpenApp}
           render={onOpenApp ? undefined : <a href={productLinks.app} />}
         >
-          Open App <ArrowRight aria-hidden="true" />
+          {workspace ? 'Workspace' : 'Open App'}{' '}
+          <ArrowRight aria-hidden="true" />
         </Button>
       </div>
     </header>

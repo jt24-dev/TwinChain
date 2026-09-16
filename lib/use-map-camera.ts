@@ -54,6 +54,7 @@ export function useMapCamera(facilities: readonly Facility[]) {
     const element = viewport.current;
     if (!element) return;
     const wheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
       if ((event.target as HTMLElement).closest('button, a')) return;
       event.preventDefault();
       const rect = element.getBoundingClientRect();

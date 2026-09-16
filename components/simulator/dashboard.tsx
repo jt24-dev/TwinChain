@@ -7,7 +7,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { ArrowRight, Check, Network, Radio, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Radio, TriangleAlert } from 'lucide-react';
 import { getNetworkState } from '@/lib/data/scenario';
 import { KpiCards } from './kpi-cards';
 import { NetworkMap } from './network-map';
@@ -15,6 +15,7 @@ import { ScenarioControls } from './scenario-controls';
 import { useScenarioTools } from '@/lib/use-scenario-tools';
 import type { StrategyId } from '@/lib/simulation/mitigation';
 import { StrategyComparison } from './strategy-comparison';
+import { MitigationControls } from './mitigation-controls';
 import { useNetworks } from '@/lib/use-networks';
 import { useNetworkBuilder } from '@/lib/use-network-builder';
 import { normalNetworkView } from '@/lib/networks';
@@ -25,9 +26,10 @@ import { NetworkImport } from './network-import';
 import { operationalCompleteness } from '@/lib/operations';
 import { InventorySummary } from './inventory-impact';
 import { ProductHome } from './product-home';
+import { WorkspaceHome } from './workspace-home';
 import { AboutProduct, PrivacyNote } from './product-info';
 import { ProductHeader } from './product-navigation';
-import { productEntry } from '@/lib/product-entry';
+import { productLinks, resolveProductEntry } from '@/lib/product-entry';
 import { exportNetwork } from '@/lib/network-backup';
 import {
   AlertDialog,
@@ -44,8 +46,14 @@ import {
 } from '@/lib/simulation/facility-shutdown';
 export function Dashboard() {
   const library = useNetworks();
-  const [homeOverride, setHome] = useState<boolean | null>(null);
-  const home = homeOverride ?? !library.hasSavedSession;
+  const [view, setView] = useState<'home' | 'app' | 'demo' | 'network'>('home');
+  const home = view === 'home';
+  const navigate = (next: typeof view) => {
+    window.history.pushState(null, '', productLinks[next]);
+    setView(next);
+    window.scrollTo(0, 0);
+  };
+  const setHome = (next: boolean) => navigate(next ? 'home' : 'network');
   const [about, setAbout] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [productError, setProductError] = useState('');
@@ -78,22 +86,36 @@ export function Dashboard() {
   useEffect(() => {
     if (!library.ready || entryHandled.current) return;
     entryHandled.current = true;
-    const entry = productEntry(window.location.search);
-    if (entry === 'home') {
-      setHome(true);
-      requestAnimationFrame(() =>
-        document
-          .getElementById(window.location.hash.slice(1))
-          ?.scrollIntoView(),
-      );
-    } else if (entry === 'app') setHome(false);
-    else if (entry === 'demo') {
-      library.open('demo');
-      setHome(false);
-      setMode('simulate');
+    const applyEntry = () => {
+      const entry = resolveProductEntry(window.location.search);
+      setView(entry);
+      if (entry === 'demo') {
+        library.open('demo');
+        setMode('simulate');
+      }
       setDisruption(false);
-    }
+      if (entry === 'home')
+        requestAnimationFrame(() =>
+          document
+            .getElementById(window.location.hash.slice(1))
+            ?.scrollIntoView(),
+        );
+    };
+    applyEntry();
   }, [library.ready, library.open, setDisruption]);
+  useEffect(() => {
+    const back = () => {
+      const entry = resolveProductEntry(window.location.search);
+      setView(entry);
+      if (entry === 'demo') {
+        library.open('demo');
+        setMode('simulate');
+      }
+      setDisruption(false);
+    };
+    window.addEventListener('popstate', back);
+    return () => window.removeEventListener('popstate', back);
+  }, [library.open, setDisruption]);
   const simulation = getNetworkState(active, strategy);
   const customBase = useMemo(
     () => customBaselineState(network.facilities, network.routes),
@@ -124,7 +146,7 @@ export function Dashboard() {
   };
   const openDemo = () => {
     library.open('demo');
-    setHome(false);
+    navigate('demo');
     setMode('simulate');
     setDisruption(false);
     window.scrollTo(0, 0);
@@ -140,55 +162,29 @@ export function Dashboard() {
   useScenarioTools(setDisruption, demoSimulation);
   return (
     <div className={`app-shell ${home ? 'home-shell' : ''}`}>
-      {home ? (
-        <ProductHeader
-          onAbout={() => setAbout(true)}
-          onHome={goHome}
-          onDemo={openDemo}
-          onOpenApp={() => {
-            setHome(false);
-            window.scrollTo(0, 0);
-          }}
-          ready={library.ready}
-        />
-      ) : (
-        <header className="app-header">
-          <div className="brand">
-            <div className="brand-mark">
-              <Network size={23} />
-            </div>
-            <div>
-              <h1>
-                <button
-                  className="brand-home-link"
-                  onClick={goHome}
-                  aria-label="TwinChain home"
-                >
-                  TwinChain
-                </button>
-              </h1>
-              <p>Supply Chain Resilience Intelligence</p>
-            </div>
-          </div>
-          <div className="header-meta">
-            <span className="demo-badge">
-              <span />{' '}
-              {network.kind === 'demo' ? 'DEMO NETWORK' : 'LOCAL NETWORK'}
-            </span>
-            <Button variant="ghost" onClick={goHome}>
-              Home
-            </Button>
-            <Button variant="ghost" onClick={() => setAbout(true)}>
-              About
-            </Button>
-            <span className="version">v0.12B</span>
-          </div>
-        </header>
-      )}
+      <ProductHeader
+        onAbout={() => setAbout(true)}
+        onHome={goHome}
+        onDemo={openDemo}
+        onOpenApp={() => navigate('app')}
+        ready={library.ready}
+        workspace={!home}
+      />
       {!library.ready ? (
         <main>
           <p role="status">Opening your workspace…</p>
         </main>
+      ) : view === 'app' ? (
+        <WorkspaceHome
+          networks={library.networks}
+          onCreate={create}
+          onImport={() => setImporting(true)}
+          onDemo={openDemo}
+          onOpen={(id) => {
+            library.open(id);
+            setHome(false);
+          }}
+        />
       ) : home ? (
         <ProductHome
           networks={library.networks}
@@ -212,6 +208,7 @@ export function Dashboard() {
                 disabled={!library.ready}
                 onChange={(event) => {
                   library.open(event.target.value);
+                  navigate('network');
                   setDisruption(false);
                 }}
               >
@@ -365,14 +362,6 @@ export function Dashboard() {
               facilityCount={network.facilities.length}
             />
           )}
-          {demoSimulation && active && (
-            <StrategyComparison selected={strategy} />
-          )}
-          {mode === 'simulate' && (
-            <InventorySummary
-              result={demoSimulation ? simulation : customSimulation}
-            />
-          )}
           <div
             className={`workspace ${mode === 'build' ? 'builder-workspace' : ''}`}
           >
@@ -444,8 +433,6 @@ export function Dashboard() {
                 active={active}
                 blockedRouteCount={simulation.blockedRouteIds.length}
                 atRiskCount={simulation.atRiskFacilityIds.length}
-                strategy={strategy}
-                onStrategy={setStrategy}
                 onActivate={() => setDisruption(true)}
                 onReset={() => setDisruption(false)}
               />
@@ -462,17 +449,39 @@ export function Dashboard() {
               />
             )}
           </div>
+          <section
+            className="simulation-results"
+            aria-label="Simulation results"
+          >
+            {demoSimulation && active && (
+              <MitigationControls selected={strategy} onSelect={setStrategy} />
+            )}
+            {mode === 'simulate' && !state.active && (
+              <p className="results-placeholder">
+                Run a disruption to explore inventory exposure and downstream
+                results.
+              </p>
+            )}
+            {demoSimulation && active && (
+              <StrategyComparison selected={strategy} />
+            )}
+            {mode === 'simulate' && (
+              <InventorySummary
+                result={demoSimulation ? simulation : customSimulation}
+              />
+            )}
+          </section>
           <footer>
             <span>
-              <span className="footer-dot" /> Client-side demo · Illustrative
-              network & business impact
+              <span className="footer-dot" /> v0.12C · Client-side demo ·
+              Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>
           </footer>
           <PrivacyNote />
         </main>
       )}
-      {home && library.storageError && (
+      {(home || view === 'app') && library.storageError && (
         <p className="builder-error" role="alert">
           {library.storageError}
         </p>

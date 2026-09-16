@@ -3557,3 +3557,85 @@ select:focus-visible {
     font-size: 15px;
   }
 }
+/* v0.12C: keep the map/KPI anchor stable while results expand below it. */
+html {
+  scrollbar-gutter: stable;
+}
+.home-header {
+  --home-border: #2a3d48;
+  --home-muted: #aabbc7;
+  --home-accent: #8de0cf;
+}
+.kpi-bottom {
+  min-height: 40px;
+  align-content: start;
+}
+.kpi-value {
+  white-space: nowrap;
+  min-height: 1.15em;
+}
+.scenario-feedback {
+  min-height: 82px;
+}
+.simulation-results {
+  margin-top: 20px;
+  overflow-anchor: none;
+}
+.results-placeholder {
+  border-top: 1px solid #34434e;
+  padding: 20px 0;
+  color: #aabbc7;
+  font-size: 13px;
+}
+.simulation-results > .mitigation-controls {
+  border: 1px solid #34434e;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.simulation-results > .mitigation-controls fieldset {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.workspace-home {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-top: 40px;
+}
+.workspace-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0 32px;
+}
+.workspace-home h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+.workspace-saved {
+  display: grid;
+  gap: 12px;
+}
+.workspace-saved li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #34434e;
+  border-radius: 8px;
+  padding: 18px;
+}
+.workspace-saved p {
+  color: #aabbc7;
+  font-size: 13px;
+  margin-top: 6px;
+}
+@media (max-width: 800px) {
+  .simulation-results > .mitigation-controls fieldset {
+    grid-template-columns: 1fr;
+  }
+  .home-nav {
+    flex-wrap: wrap;
+  }
+}
