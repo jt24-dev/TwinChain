@@ -1,6 +1,14 @@
-# TwinChain · v0.12A
+# TwinChain · v0.12B
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.12B pricing and product positioning
+
+The dedicated `/pricing/` page describes the current Free product and a future Pro tier clearly labeled **Coming Soon**. It includes current-versus-planned capabilities, local-data FAQs, and the existing About/Methodology explanation. Shared navigation keeps Product and How It Works as homepage sections. Free opens the current workspace; View Planned Features stays on the page. Explicit entry links preserve saved networks and ordinary returning-session behavior.
+
+No prices, payments, subscriptions, accounts, cloud storage, feature gating, or waitlist are implemented. Pro capabilities are product directions, not available features or a committed release schedule. Display version is v0.12B; package version remains 0.12.0.
+
+Validation: TypeScript, all 132 tests (129 existing plus three entry-navigation tests), production build, and `git diff --check` pass. Five targeted browser checks covered desktop Pricing, responsive tablet/phone layouts, Free workspace entry, homepage/footer navigation, and About/Methodology. No horizontal overflow or console errors were observed. Existing chunk-size and dependency deprecation warnings remain. A small postbuild step copies Vinext’s flat Pricing export to `/pricing/index.html` so `/pricing/` also works on plain static servers without rewrite rules; no hosting configuration changed.
 
 ## v0.12A homepage and product navigation
 

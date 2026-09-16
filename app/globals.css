@@ -3358,3 +3358,202 @@ select:focus-visible {
     margin: 6px 0 0;
   }
 }
+/* Pricing shares the homepage palette and spacing. */
+.home-nav a[aria-current='page'] {
+  color: var(--home-mint, #8ceacb);
+}
+.pricing-intro {
+  padding: 64px 0 38px;
+  max-width: 840px;
+}
+.pricing-intro h2 {
+  font-size: clamp(30px, 3.5vw, 46px);
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+  margin: 18px 0;
+  font-weight: 600;
+}
+.pricing-intro h2 em {
+  font-style: normal;
+  color: #9ce8cf;
+}
+.pricing-intro > p {
+  color: var(--home-muted);
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 680px;
+}
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.plan-card {
+  border: 1px solid var(--home-border);
+  border-radius: 10px;
+  padding: 32px;
+  background: #14242f;
+}
+.plan-pro {
+  border-color: #638f83;
+  background: #152932;
+}
+.plan-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.plan-heading h3 {
+  font-size: 28px;
+  font-weight: 600;
+}
+.plan-heading > span {
+  font-size: 12px;
+  border: 1px solid var(--home-border);
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: #c6d5df;
+}
+.plan-pro .plan-heading > span {
+  color: #a2edd3;
+  border-color: #527769;
+}
+.plan-position {
+  font-size: 18px;
+  margin: 20px 0 8px;
+}
+.plan-availability {
+  color: var(--home-muted);
+  line-height: 1.6;
+  min-height: 52px;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.plan-card > .home-button {
+  width: 100%;
+}
+.plan-card h4 {
+  margin: 30px 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  scroll-margin-top: 30px;
+}
+.plan-features {
+  display: grid;
+  gap: 13px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.plan-features li {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.plan-features svg {
+  width: 16px;
+  height: 20px;
+  color: #9ce8cf;
+  flex-shrink: 0;
+}
+.planned-features li::before {
+  content: '—';
+  color: #9ce8cf;
+}
+.plan-note {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 24px;
+  color: var(--home-muted);
+}
+.pricing-comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+  margin-top: 28px;
+}
+.pricing-comparison th,
+.pricing-comparison td {
+  text-align: left;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--home-border);
+  overflow-wrap: anywhere;
+}
+.pricing-comparison thead th {
+  font-size: 18px;
+  width: 27%;
+  font-weight: 600;
+}
+.pricing-comparison thead th:first-child {
+  width: 46%;
+}
+.pricing-comparison small {
+  display: block;
+  font-size: 12px;
+  color: var(--home-muted);
+  margin-top: 5px;
+  font-weight: 400;
+}
+.pricing-comparison tbody th {
+  font-weight: 400;
+}
+.pricing-comparison td {
+  color: #bdcbd5;
+}
+.pricing-comparison .comparison-category th {
+  background: #182a35;
+  color: #9ce8cf;
+  font-weight: 600;
+  font-size: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.pricing-faq {
+  max-width: 850px;
+}
+.pricing-faq details {
+  border-bottom: 1px solid var(--home-border);
+  padding: 20px 0;
+}
+.pricing-faq summary {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+}
+.pricing-faq details p {
+  margin: 14px 0 0;
+  color: var(--home-muted);
+  line-height: 1.7;
+  font-size: 14px;
+}
+.pricing-faq > button {
+  margin-top: 20px;
+  padding-left: 0;
+  color: #9ce8cf;
+}
+.pricing-page .home-footer {
+  margin-top: 64px;
+}
+@media (max-width: 700px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+  .plan-card {
+    padding: 24px;
+  }
+  .pricing-intro {
+    padding-top: 40px;
+  }
+  .plan-availability {
+    min-height: auto;
+  }
+  .pricing-comparison th,
+  .pricing-comparison td {
+    padding: 13px 8px;
+    font-size: 12px;
+  }
+  .pricing-comparison thead th {
+    font-size: 15px;
+  }
+}

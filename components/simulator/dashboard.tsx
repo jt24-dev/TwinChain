@@ -1,5 +1,12 @@
 'use client';
-import { Fragment, useState, useCallback, useEffect, useMemo } from 'react';
+import {
+  Fragment,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { ArrowRight, Check, Network, Radio, TriangleAlert } from 'lucide-react';
 import { getNetworkState } from '@/lib/data/scenario';
 import { KpiCards } from './kpi-cards';
@@ -17,7 +24,10 @@ import { CustomShutdownControls } from './custom-shutdown-controls';
 import { NetworkImport } from './network-import';
 import { operationalCompleteness } from '@/lib/operations';
 import { InventorySummary } from './inventory-impact';
-import { ProductHome, AboutProduct, PrivacyNote } from './product-home';
+import { ProductHome } from './product-home';
+import { AboutProduct, PrivacyNote } from './product-info';
+import { ProductHeader } from './product-navigation';
+import { productEntry } from '@/lib/product-entry';
 import { exportNetwork } from '@/lib/network-backup';
 import {
   AlertDialog,
@@ -64,6 +74,26 @@ export function Dashboard() {
     setCustomSelected(null);
   }, [network.id, setDisruption]);
   const normalView = useMemo(() => normalNetworkView(network), [network]);
+  const entryHandled = useRef(false);
+  useEffect(() => {
+    if (!library.ready || entryHandled.current) return;
+    entryHandled.current = true;
+    const entry = productEntry(window.location.search);
+    if (entry === 'home') {
+      setHome(true);
+      requestAnimationFrame(() =>
+        document
+          .getElementById(window.location.hash.slice(1))
+          ?.scrollIntoView(),
+      );
+    } else if (entry === 'app') setHome(false);
+    else if (entry === 'demo') {
+      library.open('demo');
+      setHome(false);
+      setMode('simulate');
+      setDisruption(false);
+    }
+  }, [library.ready, library.open, setDisruption]);
   const simulation = getNetworkState(active, strategy);
   const customBase = useMemo(
     () => customBaselineState(network.facilities, network.routes),
@@ -110,55 +140,36 @@ export function Dashboard() {
   useScenarioTools(setDisruption, demoSimulation);
   return (
     <div className={`app-shell ${home ? 'home-shell' : ''}`}>
-      <header className={`app-header ${home ? 'home-header' : ''}`}>
-        <div className="brand">
-          <div className="brand-mark">
-            <Network size={23} />
-          </div>
-          <div>
-            <h1>
-              <button
-                className="brand-home-link"
-                onClick={goHome}
-                aria-label="TwinChain home"
-              >
-                TwinChain
-              </button>
-            </h1>
-            <p>Supply Chain Resilience Intelligence</p>
-          </div>
-        </div>
-        {home ? (
-          <>
-            <nav className="home-nav" aria-label="Main navigation">
-              <a href="#product">Product</a>
-              <a href="#how-it-works">How It Works</a>
-              <Button variant="ghost" onClick={() => setAbout(true)}>
-                About
-              </Button>
-            </nav>
-            <div className="home-nav-actions">
-              <Button
-                className="home-button"
-                variant="ghost"
-                onClick={openDemo}
-                disabled={!library.ready}
-              >
-                Try Demo
-              </Button>
-              <Button
-                className="home-button"
-                onClick={() => {
-                  setHome(false);
-                  window.scrollTo(0, 0);
-                }}
-                disabled={!library.ready}
-              >
-                Open App <ArrowRight aria-hidden="true" />
-              </Button>
+      {home ? (
+        <ProductHeader
+          onAbout={() => setAbout(true)}
+          onHome={goHome}
+          onDemo={openDemo}
+          onOpenApp={() => {
+            setHome(false);
+            window.scrollTo(0, 0);
+          }}
+          ready={library.ready}
+        />
+      ) : (
+        <header className="app-header">
+          <div className="brand">
+            <div className="brand-mark">
+              <Network size={23} />
             </div>
-          </>
-        ) : (
+            <div>
+              <h1>
+                <button
+                  className="brand-home-link"
+                  onClick={goHome}
+                  aria-label="TwinChain home"
+                >
+                  TwinChain
+                </button>
+              </h1>
+              <p>Supply Chain Resilience Intelligence</p>
+            </div>
+          </div>
           <div className="header-meta">
             <span className="demo-badge">
               <span />{' '}
@@ -170,10 +181,10 @@ export function Dashboard() {
             <Button variant="ghost" onClick={() => setAbout(true)}>
               About
             </Button>
-            <span className="version">v0.12A</span>
+            <span className="version">v0.12B</span>
           </div>
-        )}
-      </header>
+        </header>
+      )}
       {!library.ready ? (
         <main>
           <p role="status">Opening your workspace…</p>
