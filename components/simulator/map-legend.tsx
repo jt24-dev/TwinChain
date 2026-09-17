@@ -1,5 +1,7 @@
 import { typeColors, typeIcons } from './facility-marker';
 import type { FacilityType } from '@/lib/data/network';
+import { routeModeVisuals } from '@/lib/route-visuals';
+import { RouteModeSample } from './route-mode-indicator';
 export function MapLegend({
   alternate = false,
   protectedFlow = false,
@@ -9,12 +11,18 @@ export function MapLegend({
 }) {
   return (
     <div className="map-legend complete-legend" aria-label="Map legend">
-      <details className="transport-key">
-        <summary>Transport lanes</summary>
-        <span>
-          Curved: ocean / feeder / air · Solid: road / truck · Patterned: rail.
-          Schematic, not navigable routes.
-        </span>
+      <details className="transport-key" open>
+        <summary>Transport modes</summary>
+        <p>Pattern identifies mode; color and emphasis identify route state.</p>
+        <div className="route-mode-key">
+          {routeModeVisuals.map((visual) => (
+            <span key={visual.token} title={visual.description}>
+              <RouteModeSample mode={visual.label} />
+              {visual.label}
+            </span>
+          ))}
+        </div>
+        <small>Curves are schematic and are not navigable routes.</small>
       </details>
       <div className="legend-types">
         <strong>FACILITIES</strong>

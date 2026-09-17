@@ -1,6 +1,7 @@
 import type { Facility } from '@/lib/data/network';
 import type { ImpactedRoute } from '@/lib/simulation/model';
 import { routeGeometry } from '@/lib/map-projection';
+import { routeModeClass } from '@/lib/route-visuals';
 import { useMemo } from 'react';
 export function NetworkRoutes({
   routes,
@@ -41,6 +42,7 @@ export function NetworkRoutes({
     <g>
       {geometry.map(({ r, from, to, d }) => {
         if (!from || !to) return null;
+        const modeClass = routeModeClass(r.mode);
         return (
           <g
             key={r.id}
@@ -52,7 +54,7 @@ export function NetworkRoutes({
             <path
               d={d}
               fill="none"
-              className={`route ${r.status} ${r.alternate ? 'alternate' : ''} ${selectedRoute === r.id ? 'route-selected' : ''}`}
+              className={`route ${modeClass} ${r.status} ${r.alternate ? 'alternate' : ''} ${selectedRoute === r.id ? 'route-selected' : ''}`}
               markerEnd={onSelect ? 'url(#route-direction)' : undefined}
             >
               <title>{`${from.name} → ${to.name} · ${r.mode} · ${r.status}`}</title>
@@ -61,7 +63,7 @@ export function NetworkRoutes({
               <path
                 d={d}
                 fill="none"
-                className={`route-flow ${r.status} ${r.alternate ? 'alternate' : ''}`}
+                className={`route-flow ${modeClass} ${r.status} ${r.alternate ? 'alternate' : ''}`}
               />
             )}
             {onSelect && (

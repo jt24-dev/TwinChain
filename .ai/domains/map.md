@@ -13,6 +13,7 @@ Render every Demo, Custom, imported, baseline, disrupted, and mitigated network 
 - `components/simulator/basemap.tsx` and `lib/data/geography.json` — Natural Earth-derived countries and contextual labels.
 - `components/simulator/facility-marker.tsx` — facility glyph, status, selection, stockout/protection badges, and labels.
 - `components/simulator/network-routes.tsx` — route paths, movement, state, mode, alternate styling, and route hit targets.
+- `lib/route-visuals.ts` and `components/simulator/route-mode-indicator.tsx` — shared mode tokens, legend samples, and detail badge.
 - `components/simulator/map-legend.tsx` — visual key matching facility/route state styling.
 - `components/simulator/facility-details.tsx` and `route-details.tsx` — selected entity explanations.
 - `app/globals.css` — map dimensions and visual state selectors.
@@ -35,10 +36,8 @@ Normal wheel/trackpad events scroll the page. Map wheel zoom requires Ctrl/Cmd. 
 - The map remains the stable visual anchor; result panels belong below it rather than changing its size/position.
 - Keep zoom within `MIN_ZOOM`/`MAX_ZOOM`, and preserve sensible bounds for empty, single-node, regional, and global networks.
 - Dense-network animation safeguards must remain in place; do not assume Demo-scale data.
-- Alternate, blocked, affected, and normal routes must stay visually distinguishable, and the legend must describe actual styling.
+- Transportation mode determines route pattern/weight and movement cadence; operational state determines color/emphasis. Alternate, blocked, affected, and normal routes must stay visually distinguishable without erasing mode identity, and the legend must describe actual styling.
 - Natural Earth attribution must stay usable without triggering map placement or movement.
-
-Future route-mode visualization is a known UX improvement, but it is not implemented by documenting this domain.
 
 ## Relevant Tests
 
@@ -47,6 +46,7 @@ Future route-mode visualization is a known UX improvement, but it is not impleme
 - `tests/networks.test.mjs` — inverse placement and no Demo offsets.
 - `tests/ontario-location.test.mjs` — corrected Toronto/Ontario source location and fit inclusion.
 - `tests/custom-mitigation.test.mjs` and `tests/mitigation.test.mjs` — alternate result metadata consumed by route styling.
+- `tests/route-visuals.test.mjs` — complete, unique, stable route-mode visual mapping.
 
 ## Common Change Areas
 
