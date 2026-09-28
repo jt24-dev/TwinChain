@@ -48,7 +48,9 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 `lib/use-networks.ts` is the client state/persistence hook. It reads and writes the versioned `supply-chain-networks-v1` localStorage record, exposes create/open/edit/import/delete operations, and surfaces storage failures without deliberately overwriting unreadable data.
 
-`lib/networks.ts` validates and allowlists persisted fields. `lib/network-backup.ts` uses the same strict parser to export one Custom Network and restore it under a new ID. Persisted data includes network identity, facility/route structure, coordinates, modes, and optional operational fields. Simulation result state, mitigation state, camera state, selection, and display-only fields are intentionally excluded.
+`lib/scenarios.ts` defines compact saved scenario records, validation, network fingerprints, result summaries, and deterministic reproduction through the existing Demo or Custom simulation path. `lib/use-scenarios.ts` stores them separately under `twinchain-scenarios-v1`. Scenario records reference networks and preserve inputs; they do not duplicate networks or persist derived map state. `scenario-history.tsx` provides save, reopen, and delete controls below the stable simulator workspace.
+
+`lib/networks.ts` validates and allowlists persisted fields. `lib/network-backup.ts` uses the same strict parser to export one Custom Network and restore it under a new ID. Persisted network data includes network identity, facility/route structure, coordinates, modes, and optional operational fields. Simulation result state, camera state, selection, and display-only fields remain excluded. Scenario history is intentionally separate from the existing single-network JSON backup format.
 
 ## Imports
 

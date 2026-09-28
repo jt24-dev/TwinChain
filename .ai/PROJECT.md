@@ -19,6 +19,7 @@ The product includes:
 - JSON export, local browser persistence, saved-network continuation, and recovery of valid records from partially damaged storage.
 - A geographic world map with Natural Earth context, accurate latitude/longitude projection, route curves, dateline handling, pan, intentional wheel zoom, touch/keyboard controls, and network fitting.
 - Deterministic downstream disruption propagation, inventory depletion, projected stockouts, KPI impact, Demo mitigation, and targeted Custom Network mitigation.
+- Separate local Scenario History for named Demo or Custom disruption/mitigation inputs, with deterministic reopen, network-change safety, and compact KPI/risk snapshots.
 - Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, and product entry state. The current suite is approximately 148 tests.
 
 ## Technical Philosophy

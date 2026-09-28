@@ -1,6 +1,12 @@
-# TwinChain · v0.13A
+# TwinChain · v0.13B
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.13B Scenario Save & History
+
+After running a Demo or Custom Network disruption, optionally apply a response and save the current scenario with a custom name. Scenario History stores a compact local record containing the network reference and fingerprint, shutdown input, mitigation configuration, KPI snapshot, and risk/stockout summary. History survives refresh and is sorted newest first.
+
+Reopening validates that the referenced network still exists and matches its saved fingerprint, then recomputes the disruption and mitigation through the existing deterministic simulation pipeline. Saved KPI values remain display metadata rather than simulation source state. Missing or changed networks produce a clear message while leaving the saved metadata available. Deleting a scenario never deletes its network. Scenario history uses a separate versioned browser-storage key; the existing single-network JSON backup format is unchanged.
 
 ## v0.13A Custom Network mitigation
 
@@ -10,7 +16,7 @@ Reroute selects one disrupted inbound flow and an existing healthy connection to
 
 Expedite selects one exposed downstream facility, restores 80% of missing supply, retains 20% of additional delay, and adds $32 per emergency unit over the closure horizon. Missing demand uses 100 units/day. Both responses reuse the inventory depletion/stockout calculation and Custom KPI pipeline; recovery adjusts topology severity, and intervention spending is added to the original disruption cost. No stored operational values change. Missing inventory remains No Data, not claimed protection.
 
-These are illustrative Day-0 recovery assumptions, not freight quotes. Only the selected destination receives supply recovery; other downstream routes and facilities retain their original exposure. No shared-capacity allocation, multiple interventions, automatic routing, alternate suppliers, inventory transfers, all-strategy matrix, history, or optimization is included. Configurable coefficients live in `lib/simulation/custom-mitigation.ts`.
+These are illustrative Day-0 recovery assumptions, not freight quotes. Only the selected destination receives supply recovery; other downstream routes and facilities retain their original exposure. No shared-capacity allocation, multiple interventions, automatic routing, alternate suppliers, inventory transfers, all-strategy matrix, or optimization is included. Configurable coefficients live in `lib/simulation/custom-mitigation.ts`.
 
 Validation: TypeScript, all 148 tests (136 existing + 12 focused mitigation tests), production build and diff check pass. Four targeted browser checks covered the imported Custom Network Do Nothing baseline, valid reroute, Expedite, switching and reset. In the fixture, service improved 84% → 87%, projected stockout was prevented, and cost rose $380,000 → $390,500 (reroute) or $397,920 (Expedite). The map retained identical position/height and the console was clear. A stale Demo-only help message found in validation was corrected and the preview rebuilt. Existing build warnings remain.
 
@@ -94,22 +100,22 @@ The Demo uses explicitly illustrative buffers: Los Angeles 4,000 units / 1,000 d
 
 Facilities and routes support optional aggregate operational data. In Build mode, select an element and expand **Operational Data**. Leave fields blank to keep them unset; clearing a field removes its saved value. Invalid entries display inline errors and preserve the last valid saved value. Existing networks and files remain valid, with no migration or invented defaults. Only three Demo facilities have illustrative inventory data.
 
-| Facility field / optional import column | Meaning |
-| --- | --- |
-| `capacity` | Maximum generic units/day |
-| `current_inventory` | Available generic units |
-| `daily_demand` | Demand or flow requirement, generic units/day |
-| `utilization` | 0–100% |
-| `replenishment_lead_time` | Days |
-| `criticality` | Low, Medium, High, Critical; user-entered metadata |
+| Facility field / optional import column | Meaning                                            |
+| --------------------------------------- | -------------------------------------------------- |
+| `capacity`                              | Maximum generic units/day                          |
+| `current_inventory`                     | Available generic units                            |
+| `daily_demand`                          | Demand or flow requirement, generic units/day      |
+| `utilization`                           | 0–100%                                             |
+| `replenishment_lead_time`               | Days                                               |
+| `criticality`                           | Low, Medium, High, Critical; user-entered metadata |
 
-| Route field / optional import column | Meaning |
-| --- | --- |
-| `transit_time` | Days, including decimals |
-| `cost_per_shipment` | USD |
-| `route_capacity` | Generic units per shipment |
-| `shipment_frequency` | Shipments/week |
-| `reliability` | 0–100%; metadata only |
+| Route field / optional import column | Meaning                    |
+| ------------------------------------ | -------------------------- |
+| `transit_time`                       | Days, including decimals   |
+| `cost_per_shipment`                  | USD                        |
+| `route_capacity`                     | Generic units per shipment |
+| `shipment_frequency`                 | Shipments/week             |
+| `reliability`                        | 0–100%; metadata only      |
 
 Numeric values must be finite and non-negative; percentages cannot exceed 100. These columns work in both Excel worksheets and paired CSV files. Updated CSV templates include one illustrative enriched facility and route; all additional columns are optional. Imports report how many facilities/routes contain operational values.
 
@@ -123,10 +129,10 @@ Choose **Import Network**, upload an `.xlsx` workbook or a pair of CSV files, th
 
 Excel requires **Facilities** and **Routes** worksheets (case-insensitive). CSV requires separate comma-separated Facilities and Routes files, with headers in the first nonempty row. Download the two minimal CSV templates from the import dialog; they can also be pasted into the corresponding Excel worksheets.
 
-| Table | Required columns | Optional columns |
-| --- | --- | --- |
+| Table      | Required columns                              | Optional columns            |
+| ---------- | --------------------------------------------- | --------------------------- |
 | Facilities | `id`, `name`, `type`, `latitude`, `longitude` | `city`, `region`, `country` |
-| Routes | `id`, `source`, `destination`, `mode` | None |
+| Routes     | `id`, `source`, `destination`, `mode`         | None                        |
 
 Facility types are Supplier, Factory, Port, Distribution Center, and Customer Market; `DC` is accepted. Modes are Ocean, Truck, Rail, Air, Road, and Feeder. Whitespace and capitalization are normalized for headers/types/modes. Explicit header aliases `lat`, `lon`/`lng`, `from`, and `to` are accepted. IDs remain case-sensitive; store Excel IDs as text to retain leading zeros. Unknown values are rejected rather than guessed.
 
@@ -248,11 +254,11 @@ The pipeline is **Network → Disruption → Downstream propagation → Business
 
 These recovery assumptions stand in for partial alternate capacity and protected critical demand; they are not capacity estimates or an optimization. A normal risk level after intervention means exposure is controlled, not that all delay has disappeared. Downstream routes return to normal when their source's risk clears. Original source/hop information stays available in facility details alongside original and mitigated delays.
 
-| Response | Service | Lead time | Logistics cost | At risk |
-| --- | ---: | ---: | ---: | ---: |
-| Do Nothing | 89% | 20 days | $1,480,000 | 3 |
-| Reroute via Singapore | 95% | 16 days | $1,578,000 | 2 |
-| Air Freight Critical Flow | 96% | 14 days | $1,893,000 | 1 |
+| Response                  | Service | Lead time | Logistics cost | At risk |
+| ------------------------- | ------: | --------: | -------------: | ------: |
+| Do Nothing                |     89% |   20 days |     $1,480,000 |       3 |
+| Reroute via Singapore     |     95% |   16 days |     $1,578,000 |       2 |
+| Air Freight Critical Flow |     96% |   14 days |     $1,893,000 |       1 |
 
 These are calculated examples, not stored KPI overrides. Reroute delays are 6/4/3/2 days; air delays are 3/1/1/1. Before the inventory layer, the existing severity weights still give service levels of 91% and 95%. Costs use remaining topology penalties plus the daily strategy premium. There is no free mitigation: service and speed improve at a higher total logistics cost.
 

@@ -1,12 +1,14 @@
 import type { Facility } from '@/lib/data/network';
 import type { ImpactedRoute } from '@/lib/simulation/model';
 import { routeGeometry } from '@/lib/map-projection';
-import { routeModeClass } from '@/lib/route-visuals';
+import { routeMarkerPoint, routeModeClass } from '@/lib/route-visuals';
+import { RouteModeMarker } from './route-mode-indicator';
 import { useMemo } from 'react';
 export function NetworkRoutes({
   routes,
   facilities,
   demoLayout,
+  scale = 1,
   selectedRoute,
   onSelect,
   selectionLabel = 'Edit route',
@@ -14,6 +16,7 @@ export function NetworkRoutes({
   routes: ImpactedRoute[];
   facilities: Facility[];
   demoLayout: boolean;
+  scale?: number;
   selectedRoute?: string;
   onSelect?: (id: string) => void;
   selectionLabel?: string;
@@ -23,24 +26,22 @@ export function NetworkRoutes({
     return routes.map((r) => {
       const from = byId.get(r.from),
         to = byId.get(r.to);
+      const d =
+        from && to
+          ? routeGeometry(from, to, ['Ocean', 'Feeder', 'Air'].includes(r.mode))
+          : '';
       return {
         r,
         from,
         to,
-        d:
-          from && to
-            ? routeGeometry(
-                from,
-                to,
-                ['Ocean', 'Feeder', 'Air'].includes(r.mode),
-              )
-            : '',
+        d,
+        marker: d ? routeMarkerPoint(d) : null,
       };
     });
   }, [facilities, routes]);
   return (
     <g>
-      {geometry.map(({ r, from, to, d }) => {
+      {geometry.map(({ r, from, to, d, marker }) => {
         if (!from || !to) return null;
         const modeClass = routeModeClass(r.mode);
         return (
@@ -59,11 +60,28 @@ export function NetworkRoutes({
             >
               <title>{`${from.name} → ${to.name} · ${r.mode} · ${r.status}`}</title>
             </path>
+            <path
+              d={d}
+              fill="none"
+              className={`route-mode-accent ${modeClass} ${r.status} ${r.alternate ? 'alternate' : ''}`}
+              aria-hidden="true"
+            />
             {r.status !== 'blocked' && (
               <path
                 d={d}
                 fill="none"
                 className={`route-flow ${modeClass} ${r.status} ${r.alternate ? 'alternate' : ''}`}
+              />
+            )}
+            {marker && (
+              <RouteModeMarker
+                mode={r.mode}
+                x={marker.x}
+                y={marker.y}
+                scale={scale}
+                status={r.status}
+                alternate={r.alternate}
+                selected={selectedRoute === r.id}
               />
             )}
             {onSelect && (

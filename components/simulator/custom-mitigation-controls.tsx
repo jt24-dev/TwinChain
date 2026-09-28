@@ -22,10 +22,16 @@ export function CustomMitigationControls({
   choice: CustomMitigation;
   onApply: (choice: CustomMitigation) => void;
 }) {
-  const [draft, setDraft] = useState<StrategyId>('do-nothing');
-  const [route, setRoute] = useState('');
-  const [alternate, setAlternate] = useState('');
-  const [target, setTarget] = useState('');
+  const [draft, setDraft] = useState<StrategyId>(choice.id);
+  const [route, setRoute] = useState(
+    choice.id === 'reroute' ? choice.routeId : '',
+  );
+  const [alternate, setAlternate] = useState(
+    choice.id === 'reroute' ? choice.alternateRouteId : '',
+  );
+  const [target, setTarget] = useState(
+    choice.id === 'air-freight' ? choice.facilityId : '',
+  );
   const [error, setError] = useState('');
   const targets = expediteTargets(original);
   const flows = original.routes.filter(

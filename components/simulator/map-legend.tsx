@@ -13,7 +13,7 @@ export function MapLegend({
     <div className="map-legend complete-legend" aria-label="Map legend">
       <details className="transport-key" open>
         <summary>Transport modes</summary>
-        <p>Pattern identifies mode; color and emphasis identify route state.</p>
+        <p>Icon, pattern, and weight identify mode. Color shows route state.</p>
         <div className="route-mode-key">
           {routeModeVisuals.map((visual) => (
             <span key={visual.token} title={visual.description}>

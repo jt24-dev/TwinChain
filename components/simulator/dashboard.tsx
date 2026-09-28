@@ -8,7 +8,7 @@ import {
   useRef,
 } from 'react';
 import { ArrowRight, Check, Radio, TriangleAlert } from 'lucide-react';
-import { getNetworkState } from '@/lib/data/scenario';
+import { getNetworkState, shanghaiClosure } from '@/lib/data/scenario';
 import { KpiCards } from './kpi-cards';
 import { NetworkMap } from './network-map';
 import { ScenarioControls } from './scenario-controls';
@@ -30,6 +30,7 @@ import { CustomShutdownControls } from './custom-shutdown-controls';
 import { NetworkImport } from './network-import';
 import { operationalCompleteness } from '@/lib/operations';
 import { InventorySummary } from './inventory-impact';
+import { ScenarioHistory } from './scenario-history';
 import { ProductHome } from './product-home';
 import { WorkspaceHome } from './workspace-home';
 import { AboutProduct, PrivacyNote } from './product-info';
@@ -49,8 +50,17 @@ import {
   runFacilityShutdown,
   type FacilityShutdown,
 } from '@/lib/simulation/facility-shutdown';
+import { useScenarios } from '@/lib/use-scenarios';
+import {
+  createSavedScenario,
+  defaultScenarioName,
+  reproduceSavedScenario,
+  type SavedScenario,
+  type SavedScenarioMitigation,
+} from '@/lib/scenarios';
 export function Dashboard() {
   const library = useNetworks();
+  const scenarioLibrary = useScenarios();
   const [view, setView] = useState<'home' | 'app' | 'demo' | 'network'>('home');
   const home = view === 'home';
   const navigate = (next: typeof view) => {
@@ -81,17 +91,45 @@ export function Dashboard() {
   const [customChoice, setCustomChoice] = useState<CustomMitigation>({
     id: 'do-nothing',
   });
+  const [scenarioNotice, setScenarioNotice] = useState('');
+  const [scenarioRevision, setScenarioRevision] = useState(0);
+  const pendingScenario = useRef<SavedScenario | null>(null);
   const setDisruption = useCallback((next: boolean) => {
     setActive(next);
     setShutdown(null);
     setStrategy('do-nothing');
     setCustomChoice({ id: 'do-nothing' });
   }, []);
+  const restoreScenarioInputs = useCallback((saved: SavedScenario) => {
+    setMode('simulate');
+    setCustomSelected(saved.disruption.facilityId);
+    setScenarioRevision((current) => current + 1);
+    if (saved.networkId === 'demo' && saved.mitigation.kind === 'demo') {
+      setActive(true);
+      setShutdown(null);
+      setStrategy(saved.mitigation.strategy);
+      setCustomChoice({ id: 'do-nothing' });
+      return;
+    }
+    setActive(false);
+    setStrategy('do-nothing');
+    setShutdown({ ...saved.disruption, networkId: saved.networkId });
+    setCustomChoice(
+      saved.mitigation.kind === 'custom'
+        ? { ...saved.mitigation.choice }
+        : { id: 'do-nothing' },
+    );
+  }, []);
   useEffect(() => {
     setDisruption(false);
     setMode(network.kind === 'demo' ? 'simulate' : 'build');
     setCustomSelected(null);
-  }, [network.id, setDisruption]);
+    const pending = pendingScenario.current;
+    if (pending?.networkId === network.id) {
+      pendingScenario.current = null;
+      restoreScenarioInputs(pending);
+    }
+  }, [network.id, network.kind, restoreScenarioInputs, setDisruption]);
   const normalView = useMemo(() => normalNetworkView(network), [network]);
   const entryHandled = useRef(false);
   useEffect(() => {
@@ -146,6 +184,59 @@ export function Dashboard() {
     () => applyCustomMitigation(customDisruption, customChoice),
     [customDisruption, customChoice],
   );
+  const scenarioContext:
+    | {
+        disruption: FacilityShutdown;
+        mitigation: SavedScenarioMitigation;
+        result: typeof simulation;
+      }
+    | undefined =
+    demoSimulation && active
+      ? {
+          disruption: {
+            type: 'facility-shutdown',
+            facilityId: shanghaiClosure.disruptedFacilityId,
+            durationDays: shanghaiClosure.durationDays,
+          },
+          mitigation: { kind: 'demo', strategy },
+          result: simulation,
+        }
+      : mode === 'simulate' &&
+          network.kind === 'custom' &&
+          shutdown?.networkId === network.id &&
+          customSimulation.active
+        ? {
+            disruption: shutdown,
+            mitigation: { kind: 'custom', choice: customChoice },
+            result: customSimulation,
+          }
+        : undefined;
+  const saveCurrentScenario = (name: string) => {
+    if (!scenarioContext) throw new Error('Run a disruption before saving.');
+    const saved = createSavedScenario({
+      id: crypto.randomUUID(),
+      name,
+      createdAt: new Date().toISOString(),
+      network,
+      ...scenarioContext,
+    });
+    scenarioLibrary.save(saved);
+    setScenarioNotice(`Saved “${saved.name}”.`);
+  };
+  const openSavedScenario = (saved: SavedScenario) => {
+    const reproduction = reproduceSavedScenario(saved, library.networks);
+    if (!reproduction.ok) {
+      setScenarioNotice(reproduction.message);
+      return;
+    }
+    if (network.id === saved.networkId) restoreScenarioInputs(saved);
+    else {
+      pendingScenario.current = saved;
+      library.open(saved.networkId);
+    }
+    navigate(saved.networkId === 'demo' ? 'demo' : 'network');
+    setScenarioNotice(`Reopened “${saved.name}”.`);
+  };
   const state =
     mode === 'build'
       ? normalView
@@ -484,7 +575,7 @@ export function Dashboard() {
               network.kind === 'custom' &&
               customDisruption.active && (
                 <CustomMitigationControls
-                  key={`${network.id}-${shutdown?.facilityId}-${shutdown?.durationDays}`}
+                  key={`${network.id}-${shutdown?.facilityId}-${shutdown?.durationDays}-${scenarioRevision}`}
                   original={customDisruption}
                   result={customSimulation}
                   choice={customChoice}
@@ -505,10 +596,35 @@ export function Dashboard() {
                 result={demoSimulation ? simulation : customSimulation}
               />
             )}
+            {mode === 'simulate' && (
+              <ScenarioHistory
+                active={Boolean(scenarioContext)}
+                defaultName={
+                  scenarioContext
+                    ? defaultScenarioName(
+                        network,
+                        scenarioContext.disruption,
+                        scenarioContext.mitigation,
+                      )
+                    : ''
+                }
+                scenarios={scenarioLibrary.scenarios}
+                ready={scenarioLibrary.ready}
+                canSave={scenarioLibrary.canSave}
+                storageError={scenarioLibrary.storageError}
+                notice={scenarioNotice}
+                onSave={saveCurrentScenario}
+                onOpen={openSavedScenario}
+                onDelete={(id) => {
+                  scenarioLibrary.remove(id);
+                  setScenarioNotice('Saved scenario deleted.');
+                }}
+              />
+            )}
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.13A · Client-side demo ·
+              <span className="footer-dot" /> v0.13B · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>

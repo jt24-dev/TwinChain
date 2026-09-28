@@ -14,6 +14,7 @@ Provide the public Home/Pricing/About shell, explicit product entry flows, works
 - `app/pricing/page.tsx` and `components/simulator/pricing-page.tsx` — dedicated Pricing route/content.
 - `components/simulator/product-info.tsx` — About/Methodology dialog and privacy/local-data explanation.
 - `components/simulator/kpi-cards.tsx`, `network-map.tsx`, `scenario-controls.tsx`, `custom-shutdown-controls.tsx`, and result/mitigation components — simulator layout regions.
+- `components/simulator/scenario-history.tsx`, `lib/scenarios.ts`, and `lib/use-scenarios.ts` — compact local scenario save/history UI, persistence, validation, and deterministic reopen orchestration.
 - `app/globals.css` — shared responsive shell, map/KPI dimensions, and stable result-area styling.
 
 ## Data Flow
@@ -23,6 +24,8 @@ Provide the public Home/Pricing/About shell, explicit product entry flows, works
 Try Demo explicitly selects the built-in Demo Network. Open App opens the general workspace where saved networks can be continued and new/import flows started. Selecting or creating a network opens its shared simulator; imported networks enter Build mode. Pricing is a dedicated static route. About and Methodology use the same dialog from the homepage, simulator, and Pricing page.
 
 Within the simulator, `Dashboard` derives one current result and renders KPI cards above a two-column workspace: map plus context on the left, Build or Simulate controls on the right. The stable `simulation-results` section follows the workspace and contains mitigation comparison/inventory results. This placement prevents result expansion from moving/resizing the map. KPI value and footer regions reserve stable space.
+
+Scenario History also renders in the stable results area. It stores network references plus reproducible disruption/mitigation inputs in a separate local record. Reopen validates the source-network fingerprint and recomputes the result; missing or changed networks remain visible as metadata and fail with a clear message.
 
 ## Important Invariants
 
@@ -35,6 +38,7 @@ Within the simulator, `Dashboard` derives one current result and renders KPI car
 - The map is the simulator’s visual anchor. Running/resetting a disruption or switching mitigation must not shift KPI cards or resize/reposition the map.
 - Result panels should expand below the workspace and clear gracefully on reset.
 - Camera and selection should remain intact across simulation state changes unless an explicit workflow changes networks/modes.
+- Saving or deleting a scenario must not mutate its source network. Reopen must recompute from validated inputs rather than trust saved KPI snapshots.
 - Preserve keyboard focus, readable contrast, semantic controls/tables, and layouts at laptop/tablet/phone widths.
 - Pricing must distinguish current Free features from planned Pro features; no account/payment/cloud behavior exists.
 

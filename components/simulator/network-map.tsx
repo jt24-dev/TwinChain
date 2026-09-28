@@ -234,6 +234,7 @@ export function NetworkMap({
               routes={state.routes}
               facilities={state.facilities}
               demoLayout={demoLayout}
+              scale={scale}
               selectionLabel={builder ? 'Edit route' : 'Inspect route'}
               onSelect={
                 builder?.selectRoute ??

@@ -32,7 +32,7 @@ const comparison = [
         'Demo + targeted Custom responses',
         'Further mitigation planned',
       ],
-      ['Saved scenario history', 'Not available', 'Planned'],
+      ['Saved scenario history', 'Included', 'Available in Free'],
     ],
   },
   {
@@ -136,7 +136,7 @@ export function PricingPage() {
             <ul className="plan-features planned-features">
               {[
                 'Cloud saving and cross-device access',
-                'Saved scenario history and advanced comparison',
+                'Advanced scenario comparison dashboard',
                 'Advanced custom mitigation and operational analysis',
                 'Analytical reports and exports',
                 'Team sharing and collaboration',

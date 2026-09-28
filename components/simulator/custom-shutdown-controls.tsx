@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Facility } from '@/lib/data/network';
 import type { FacilityShutdown } from '@/lib/simulation/facility-shutdown';
@@ -22,9 +22,12 @@ export function CustomShutdownControls({
   onReset: () => void;
 }) {
   const [duration, setDuration] = useState('14');
+  useEffect(() => {
+    if (running) setDuration(String(running.durationDays));
+  }, [running]);
   const days = Number(duration);
   const valid = Number.isInteger(days) && days >= 1 && days <= 90;
-  const validSelection = facilities.some(f => f.id === selected);
+  const validSelection = facilities.some((f) => f.id === selected);
   return (
     <aside
       className="scenario-panel custom-simulation"
@@ -98,7 +101,10 @@ export function CustomShutdownControls({
         Illustrative KPIs based on network size and calculated impact. Returning
         to Build clears the shutdown.
       </p>
-      <p>Run a shutdown to compare rerouting or emergency supply against Do Nothing in the results below the map.</p>
+      <p>
+        Run a shutdown to compare rerouting or emergency supply against Do
+        Nothing in the results below the map.
+      </p>
     </aside>
   );
 }

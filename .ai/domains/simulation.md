@@ -33,6 +33,7 @@ Inventory adjusts risk count and service impact, while topology-derived lead tim
 - Record shortest hop distance and do not rediscover the shutdown source.
 - The original `Facility[]` and `Route[]` must never be mutated.
 - Risk, route status, inventory projection, and KPIs are derived state and must not enter persistence/import schemas.
+- Saved scenarios may retain a KPI/risk snapshot for history display, but reopen must validate the source network and recompute through the simulation pipeline from saved inputs.
 - Missing operational data uses the established `no-data`/topology behavior. Never fabricate stockout timing or inventory protection.
 - Capacity weighting is used only when all inbound capacities are positive and finite; mixed/missing capacity falls back for the whole inbound set.
 - Values remain bounded: supply 0–1, inventory nonnegative, and service within its configured floor/100%.

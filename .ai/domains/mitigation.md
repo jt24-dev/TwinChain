@@ -15,6 +15,7 @@ Apply a deterministic response to an already calculated disruption, recalculate 
 - `lib/simulation/model.ts` — mitigation metadata and alternate-route flag.
 - `components/simulator/network-routes.tsx`, `map-legend.tsx`, `route-details.tsx`, and `facility-details.tsx` — mitigation visualization/explanation.
 - `components/simulator/dashboard.tsx` — holds original disruption separately from selected strategy/result and clears mitigation on reset/network changes.
+- `lib/scenarios.ts` and `components/simulator/scenario-history.tsx` — preserve the selected strategy/configuration as reproducible scenario input and restore it against the same original disruption baseline.
 
 ## Data Flow
 
@@ -50,7 +51,7 @@ Demo `applyMitigation` keeps the predefined Shanghai/Singapore behavior. It uses
 - Reset/network/mode changes clear selected targets, alternate styling, mitigation projections, and comparison state.
 - Preserve Demo outputs and existing Demo tests unless a request explicitly changes them.
 
-Current deferrals: automatic routing/optimization, downstream reallocation, Alternate Source, Inventory Transfer, multiple simultaneous interventions, mitigation history, and a full all-strategy comparison dashboard.
+Current deferrals: automatic routing/optimization, downstream reallocation, Alternate Source, Inventory Transfer, multiple simultaneous interventions, multi-step intervention history, and a full all-strategy comparison dashboard.
 
 ## Relevant Tests
 

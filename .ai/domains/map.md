@@ -36,7 +36,7 @@ Normal wheel/trackpad events scroll the page. Map wheel zoom requires Ctrl/Cmd. 
 - The map remains the stable visual anchor; result panels belong below it rather than changing its size/position.
 - Keep zoom within `MIN_ZOOM`/`MAX_ZOOM`, and preserve sensible bounds for empty, single-node, regional, and global networks.
 - Dense-network animation safeguards must remain in place; do not assume Demo-scale data.
-- Transportation mode determines route pattern/weight and movement cadence; operational state determines color/emphasis. Alternate, blocked, affected, and normal routes must stay visually distinguishable without erasing mode identity, and the legend must describe actual styling.
+- Transportation mode determines route icon, pattern/weight, accent treatment, and movement cadence; operational state determines color/emphasis. One screen-scaled midpoint icon identifies each route outside dense-network mode. Alternate, blocked, affected, and normal routes must stay visually distinguishable without erasing mode identity, and the legend must describe actual styling.
 - Natural Earth attribution must stay usable without triggering map placement or movement.
 
 ## Relevant Tests
