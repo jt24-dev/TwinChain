@@ -68,7 +68,7 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 ## Testing
 
-Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains 185 tests. Major groups include:
+Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains 197 tests. Major groups include:
 
 - `propagation.test.mjs`, `facility-shutdown.test.mjs`, `inventory.test.mjs`
 - `mitigation.test.mjs`, `custom-mitigation.test.mjs`, `scenario.test.mjs`
@@ -77,6 +77,7 @@ Tests use Node's built-in test runner with TypeScript stripping. They live in `t
 - `geospatial.test.mjs`, `map-camera.test.mjs`, `ontario-location.test.mjs`
 - `product-entry.test.mjs`
 - `scenario-comparison.test.mjs` — selection bounds, compatibility, tradeoffs, stockout states, immutability, and reopen compatibility
+- `sku-sourcing.test.mjs` — source allocation, fallback, import mapping, persistence, scenario safety, and builder cleanup
 
 Run all tests with `npm test`. Prefer the directly relevant test file during iteration.
 
@@ -94,3 +95,7 @@ Vinext exports the static client to `dist/client`; `scripts/prepare-static-route
 ## v0.17 SKU foundation
 
 Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-inventory.ts and lib/networks.ts. Legacy absent arrays remain absent. Inventory records take precedence per facility; the existing inventory pass projects each record using facility supply availability and rolls up counts/earliest day. Result records survive mitigation recalculation. Scenario fingerprints include populated SKU data and reopen passes records to runFacilityShutdown. The compact SKU table is below the map.
+
+## v0.18 SKU sourcing
+
+`lib/sku-inventory.ts` also validates optional source→destination→SKU relationships, share groups, and route references. `lib/import/sourcing-import.ts` parses the optional mapped table; the existing import dialog handles a workbook sheet or fourth CSV. `runFacilityShutdown` carries sourcing alongside inventory records, and `applyInventoryImpact` groups it by destination+SKU once per run. Sourced records use their own unavailable share; unsourced records keep facility-level availability. The same persistence/backup allowlist and scenario fingerprint include sourcing. Build mode cleans relationships when facilities or their last directed route are deleted.

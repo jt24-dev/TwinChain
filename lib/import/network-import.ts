@@ -1,4 +1,5 @@
 import { parseSkuInventory } from './sku-import.ts';
+import { parseSkuSourcing } from './sourcing-import.ts';
 import { copySkuData, type SkuData } from '../sku-inventory.ts';
 import Papa from 'papaparse';
 import { importOperations } from '../operations.ts';
@@ -15,6 +16,7 @@ export const IMPORT_LIMITS = {
   bytes: 10 * 1024 * 1024,
   facilities: 2000,
   routes: 10000,
+  sourcing: 20000,
 };
 export type ImportTable = unknown[][];
 export interface ImportIssue {
@@ -94,6 +96,7 @@ export function previewImport(
   routeTable: ImportTable,
   initialIssues: ImportIssue[] = [],
   inventoryTable?: ImportTable,
+  sourcingTable?: ImportTable,
 ): ImportPreview {
   const issues = [...initialIssues];
   const facilities: Facility[] = [],
@@ -348,10 +351,20 @@ export function previewImport(
     ? parseSkuInventory(inventoryTable, new Set(facilities.map((f) => f.id)))
     : undefined;
   if (skuData) issues.push(...skuData.issues);
+  const sourcingData = sourcingTable
+    ? parseSkuSourcing(
+        sourcingTable,
+        new Set(skuData?.skus.map((sku) => sku.id) ?? []),
+        new Set(facilities.map((facility) => facility.id)),
+        routes,
+      )
+    : undefined;
+  if (sourcingData) issues.push(...sourcingData.issues);
   return {
     ...(skuData
       ? { skus: skuData.skus, inventoryRecords: skuData.inventoryRecords }
       : {}),
+    ...(sourcingData ? { skuSourcing: sourcingData.skuSourcing } : {}),
     facilities,
     routes,
     issues,

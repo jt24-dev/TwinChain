@@ -21,7 +21,7 @@ The product includes:
 - Deterministic downstream disruption propagation, inventory depletion, projected stockouts, KPI impact, Demo mitigation, and targeted Custom Network mitigation.
 - Separate local Scenario History for named Demo or Custom disruption/mitigation inputs, with deterministic reopen, network-change safety, and compact KPI/risk snapshots.
 - Session-only comparison of two to four saved scenarios from the same unchanged network, with factual KPI/stockout tradeoffs and direct reopen.
-- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is 185 tests.
+- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is 197 tests.
 
 ## Technical Philosophy
 
@@ -44,3 +44,7 @@ Token and session efficiency are explicit project priorities. Trust these contex
 ## v0.17 SKU foundation
 
 Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-inventory.ts and lib/networks.ts. Legacy absent arrays remain absent. Inventory records take precedence per facility; the existing inventory pass projects each record using facility supply availability and rolls up counts/earliest day. Result records survive mitigation recalculation. Scenario fingerprints include populated SKU data and reopen passes records to runFacilityShutdown. The compact SKU table is below the map.
+
+## v0.18 SKU sourcing
+
+Optional `skuSourcing` records connect a source, destination, and SKU over an existing directed route; route ID and share are optional. A destination+SKU group uses complete shares totaling 100% or equal shares when all are omitted. Sourced SKU projections use source/associated-route availability; unsourced records retain the v0.17 facility-level loss. Sourcing persists through the existing Custom Network/backup allowlist and participates in scenario fingerprints. Existing mitigation is facility-level and proportionally restores affected SKU flow; it does not choose SKU suppliers or routes.

@@ -18,7 +18,7 @@ export function WorkspaceHome({
     <main className="workspace-home">
       <div className="overview-heading">
         <div>
-          <div className="eyebrow">YOUR WORKSPACE · v0.17</div>
+          <div className="eyebrow">YOUR WORKSPACE · v0.18</div>
           <h2>Choose your next network.</h2>
           <p>Continue a saved network, build your own, or import your data.</p>
         </div>

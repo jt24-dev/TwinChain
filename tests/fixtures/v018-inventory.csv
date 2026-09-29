@@ -1,0 +1,4 @@
+sku_id,sku_name,facility_id,current_inventory,daily_demand
+A,Part A,toronto,20,10
+B,Part B,toronto,20,10
+C,Part C,toronto,20,10

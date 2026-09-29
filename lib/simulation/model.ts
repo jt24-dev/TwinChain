@@ -1,4 +1,4 @@
-import type { FacilityInventory } from '../sku-inventory.ts';
+import type { FacilityInventory, SkuSourcing } from '../sku-inventory.ts';
 import type { Facility, Route } from '../data/network.ts';
 import type { InventoryImpact, InventorySummary } from './inventory.ts';
 
@@ -59,6 +59,7 @@ export interface ImpactedRoute extends Route {
 export interface SimulationResult {
   inventorySummary?: InventorySummary;
   inventoryRecords?: FacilityInventory[];
+  skuSourcing?: SkuSourcing[];
   active: boolean;
   facilities: ImpactedFacility[];
   routes: ImpactedRoute[];

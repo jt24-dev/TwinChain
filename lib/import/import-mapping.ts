@@ -1,7 +1,11 @@
 import type { Facility, Route } from '../data/network.ts';
 import type { ImportIssue, ImportTable } from './network-import.ts';
 
-export type ImportTableKind = 'facilities' | 'routes' | 'inventory';
+export type ImportTableKind =
+  | 'facilities'
+  | 'routes'
+  | 'inventory'
+  | 'sourcing';
 export type MappingConfidence = 'exact' | 'suggested' | 'unmapped';
 
 export interface ImportField {
@@ -253,12 +257,57 @@ export const inventoryImportFields: readonly ImportField[] = [
     ],
   },
 ];
+export const sourcingImportFields: readonly ImportField[] = [
+  {
+    key: 'sku_id',
+    label: 'SKU ID',
+    required: true,
+    category: 'Structural',
+    aliases: ['sku', 'item', 'material', 'part number'],
+  },
+  {
+    key: 'source_facility_id',
+    label: 'Source facility ID',
+    required: true,
+    category: 'Structural',
+    aliases: [
+      'supplier',
+      'source',
+      'source facility',
+      'origin',
+      'supply location',
+    ],
+  },
+  {
+    key: 'destination_facility_id',
+    label: 'Destination facility ID',
+    required: true,
+    category: 'Structural',
+    aliases: ['destination', 'receiving facility', 'dc', 'location'],
+  },
+  {
+    key: 'route_id',
+    label: 'Route ID',
+    required: false,
+    category: 'Structural',
+    aliases: ['route', 'lane', 'lane id'],
+  },
+  {
+    key: 'supply_share',
+    label: 'Supply share',
+    required: false,
+    category: 'Operational',
+    aliases: ['share', 'allocation', 'supply %', 'source %'],
+  },
+];
 export const importFields = (kind: ImportTableKind) =>
   kind === 'facilities'
     ? facilityImportFields
     : kind === 'routes'
       ? routeImportFields
-      : inventoryImportFields;
+      : kind === 'inventory'
+        ? inventoryImportFields
+        : sourcingImportFields;
 
 export function normalizeImportToken(value: unknown): string {
   return typeof value === 'string' || typeof value === 'number'
@@ -349,7 +398,9 @@ export function applyColumnMapping(
             ? 'Facilities'
             : kind === 'routes'
               ? 'Routes'
-              : 'Inventory',
+              : kind === 'inventory'
+                ? 'Inventory'
+                : 'SKU Sourcing',
         field: field.key,
         message:
           field.key === 'latitude'
@@ -371,7 +422,9 @@ export function applyColumnMapping(
             ? 'Facilities'
             : kind === 'routes'
               ? 'Routes'
-              : 'Inventory',
+              : kind === 'inventory'
+                ? 'Inventory'
+                : 'SKU Sourcing',
         field: field.key,
         message: `Uploaded column "${header.columns.find((column) => column.index === source)?.label ?? source + 1}" is already mapped to ${previous}. Choose a different column.`,
       });

@@ -1,0 +1,3 @@
+sku_id,source_facility_id,destination_facility_id,route_id,supply_share
+SKU-A,SUP-01,FAC-01,R-01,100%
+SKU-A,FAC-01,DC-01,R-02,100%

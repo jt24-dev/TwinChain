@@ -53,6 +53,8 @@ Demo `applyMitigation` keeps the predefined Shanghai/Singapore behavior. It uses
 
 Current deferrals: automatic routing/optimization, downstream reallocation, Alternate Source, Inventory Transfer, multiple simultaneous interventions, multi-step intervention history, and a full all-strategy comparison dashboard.
 
+With v0.18 sourcing, existing Custom mitigation still chooses facilities and routes at facility level. Its recovered fraction applies proportionally to unavailable sourced SKU flow at the target; healthy SKUs remain at full supply. It does not allocate recovery to a particular SKU supplier or choose alternate SKU sources.
+
 ## Relevant Tests
 
 - `tests/custom-mitigation.test.mjs` — eligibility, capacity, cycles, fallbacks, stockout/KPI effects, non-compounding, immutability, and reset.

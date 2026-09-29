@@ -1,0 +1,4 @@
+sku_id,source_facility_id,destination_facility_id,route_id,supply_share
+A,shanghai,toronto,ocean,60%
+A,mexico,toronto,rail,40%
+B,mexico,toronto,rail,100%

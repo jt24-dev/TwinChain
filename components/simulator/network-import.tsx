@@ -57,6 +57,9 @@ export function NetworkImport({
   const [inventorySheet, setInventorySheet] = useState('');
   const [inventoryMapping, setInventoryMapping] =
     useState<ColumnMapping>(blankMapping);
+  const [sourcingSheet, setSourcingSheet] = useState('');
+  const [sourcingMapping, setSourcingMapping] =
+    useState<ColumnMapping>(blankMapping);
   const [facilityMapping, setFacilityMapping] =
     useState<ColumnMapping>(blankMapping);
   const [routeMapping, setRouteMapping] = useState<ColumnMapping>(blankMapping);
@@ -80,6 +83,8 @@ export function NetworkImport({
     setRouteSheet('');
     setInventorySheet('');
     setInventoryMapping(blankMapping());
+    setSourcingSheet('');
+    setSourcingMapping(blankMapping());
     setFacilityMapping(blankMapping());
     setRouteMapping(blankMapping());
     setPreview(null);
@@ -130,6 +135,8 @@ export function NetworkImport({
     mappings: { facilities: ColumnMapping; routes: ColumnMapping },
     selectedInventorySheet = inventorySheet,
     selectedInventoryMapping = inventoryMapping,
+    selectedSourcingSheet = sourcingSheet,
+    selectedSourcingMapping = sourcingMapping,
   ) {
     setPreview(
       previewMappedImport(
@@ -140,6 +147,8 @@ export function NetworkImport({
         mappings.routes,
         selectedInventorySheet,
         selectedInventoryMapping,
+        selectedSourcingSheet,
+        selectedSourcingMapping,
       ),
     );
     setStep('preview');
@@ -164,6 +173,10 @@ export function NetworkImport({
         setBackup(importNetworkBackup(await file.text(), crypto.randomUUID()));
         return;
       }
+      if (format === 'csv' && files[3] && !files[2])
+        throw new Error(
+          'Add the Inventory CSV before the optional SKU Sourcing CSV so SKU IDs can be validated.',
+        );
       const raw = await readImportSource(
         format,
         files.filter((file): file is File => !!file),
@@ -181,6 +194,13 @@ export function NetworkImport({
       setInventoryMapping(
         suggestColumnMapping(inventory?.data ?? [], 'inventory'),
       );
+      const sourcing = raw.sheets.find((s) =>
+        ['sku sourcing', 'sourcing'].includes(s.name.trim().toLowerCase()),
+      );
+      setSourcingSheet(sourcing?.name ?? '');
+      setSourcingMapping(
+        suggestColumnMapping(sourcing?.data ?? [], 'sourcing'),
+      );
       if (
         format === 'excel' &&
         (!raw.standardSheets || raw.sheets.length > 2)
@@ -191,6 +211,7 @@ export function NetworkImport({
       const mappings = setMappings(raw, facilities, routes);
       if (
         !inventory &&
+        !sourcing &&
         isStandardMapping(mappings.facilities, 'facilities') &&
         isStandardMapping(mappings.routes, 'routes')
       )
@@ -224,6 +245,12 @@ export function NetworkImport({
         'inventory',
       ),
     );
+    setSourcingMapping(
+      suggestColumnMapping(
+        source.sheets.find((s) => s.name === sourcingSheet)?.data ?? [],
+        'sourcing',
+      ),
+    );
     setStep('mapping');
   }
 
@@ -255,6 +282,23 @@ export function NetworkImport({
     ) {
       setError(
         'Map the required inventory fields: SKU ID, SKU name, and Facility ID.',
+      );
+      return;
+    }
+    if (
+      sourcingSheet &&
+      importFields('sourcing').some(
+        (f) => f.required && sourcingMapping.fields[f.key] === undefined,
+      )
+    ) {
+      setError(
+        'Map the required sourcing fields: SKU ID, Source Facility ID, and Destination Facility ID.',
+      );
+      return;
+    }
+    if (sourcingSheet && !inventorySheet) {
+      setError(
+        'Select an Inventory sheet so sourced SKU IDs can be validated.',
       );
       return;
     }
@@ -297,7 +341,9 @@ export function NetworkImport({
             ? 'Facility columns'
             : kind === 'routes'
               ? 'Route columns'
-              : 'SKU inventory columns'}
+              : kind === 'inventory'
+                ? 'SKU inventory columns'
+                : 'SKU sourcing columns'}
         </h3>
         <p>TwinChain field → uploaded column</p>
         {importFields(kind).map((field) => {
@@ -361,6 +407,9 @@ export function NetworkImport({
   const inventorySummary = inventorySheet
     ? mappingSummary('inventory', inventoryMapping.fields)
     : { mapped: 0, unmappedOptional: 0 };
+  const sourcingSummary = sourcingSheet
+    ? mappingSummary('sourcing', sourcingMapping.fields)
+    : { mapped: 0, unmappedOptional: 0 };
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -405,7 +454,7 @@ export function NetworkImport({
                 [
                   ['backup', 'JSON backup'],
                   ['excel', 'Excel workbook'],
-                  ['csv', 'Two CSV files'],
+                  ['csv', 'CSV files'],
                 ] as const
               ).map(([value, label]) => (
                 <Button
@@ -424,16 +473,28 @@ export function NetworkImport({
                 ? 'Restore an exported simulator JSON backup as a new Custom Network.'
                 : format === 'excel'
                   ? 'TwinChain detects standard sheets and helps map other workbook layouts.'
-                  : 'Choose separate Facilities and Routes CSV files; custom headers can be mapped.'}{' '}
+                  : 'Choose Facilities and Routes CSV files, with optional Inventory and SKU Sourcing files; custom headers can be mapped.'}{' '}
               Latitude and longitude are required. Up to 2,000 facilities,
               10,000 routes, and 10 MB per file.
+            </p>
+            <p>
+              SKU sourcing is optional and needs the Inventory table for SKU
+              IDs. Each source must have a directed route to its destination.
+              Supply shares may be fractions or percentages; specify all shares
+              for a facility and SKU totaling 100%, or leave all blank for equal
+              shares.
             </p>
             <div className="import-files" key={format}>
               {(format === 'backup'
                 ? ['Network JSON backup']
                 : format === 'excel'
                   ? ['Excel workbook file']
-                  : ['Facilities CSV', 'Routes CSV', 'Inventory CSV (optional)']
+                  : [
+                      'Facilities CSV',
+                      'Routes CSV',
+                      'Inventory CSV (optional)',
+                      'SKU Sourcing CSV (optional)',
+                    ]
               ).map((label, index) => (
                 <label className="builder-field" key={label}>
                   {label}
@@ -483,6 +544,12 @@ export function NetworkImport({
               <a href="/templates/routes.csv" download>
                 Routes template
               </a>
+              <a href="/templates/inventory.csv" download>
+                Inventory template
+              </a>
+              <a href="/templates/sku-sourcing.csv" download>
+                SKU Sourcing template
+              </a>
             </div>
             <Button
               variant="outline"
@@ -503,7 +570,7 @@ export function NetworkImport({
             <h3>Select workbook sheets</h3>
             <p>
               TwinChain found {source.sheets.length} sheets. Confirm the network
-              tables and optional SKU inventory sheet.
+              tables and optional SKU inventory and sourcing sheets.
             </p>
             <label className="builder-field">
               Facilities worksheet
@@ -545,6 +612,25 @@ export function NetworkImport({
                   ))}
               </select>
             </label>
+            <label className="builder-field">
+              SKU Sourcing worksheet (optional)
+              <select
+                value={sourcingSheet}
+                onChange={(event) => setSourcingSheet(event.target.value)}
+              >
+                <option value="">Skip SKU sourcing</option>
+                {source.sheets
+                  .filter(
+                    (s) =>
+                      s.name !== facilitySheet &&
+                      s.name !== routeSheet &&
+                      s.name !== inventorySheet,
+                  )
+                  .map((s) => (
+                    <option key={s.name}>{s.name}</option>
+                  ))}
+              </select>
+            </label>
             <div className="import-navigation">
               <Button variant="ghost" onClick={() => setStep('upload')}>
                 Back
@@ -576,6 +662,13 @@ export function NetworkImport({
                   inventoryMapping,
                   setInventoryMapping,
                   inventorySheet,
+                )}
+              {sourcingSheet &&
+                mappingPanel(
+                  'sourcing',
+                  sourcingMapping,
+                  setSourcingMapping,
+                  sourcingSheet,
                 )}
               {mappingPanel(
                 'routes',
@@ -655,6 +748,19 @@ export function NetworkImport({
                 facilities with SKU inventory
               </p>
             )}
+            {preview.skuSourcing && (
+              <p>
+                {preview.skuSourcing.length} SKU sourcing relationships ·{' '}
+                {new Set(preview.skuSourcing.map((s) => s.skuId)).size} SKUs
+                sourced ·{' '}
+                {
+                  new Set(
+                    preview.skuSourcing.map((s) => s.destinationFacilityId),
+                  ).size
+                }{' '}
+                destination facilities
+              </p>
+            )}
             <p>
               {operationalCompleteness(preview).facilities} facilities and{' '}
               {operationalCompleteness(preview).routes} routes include
@@ -669,11 +775,13 @@ export function NetworkImport({
             <p>
               {facilitySummary.mapped +
                 routeSummary.mapped +
-                inventorySummary.mapped}{' '}
+                inventorySummary.mapped +
+                sourcingSummary.mapped}{' '}
               fields mapped ·{' '}
               {facilitySummary.unmappedOptional +
                 routeSummary.unmappedOptional +
-                inventorySummary.unmappedOptional}{' '}
+                inventorySummary.unmappedOptional +
+                sourcingSummary.unmappedOptional}{' '}
               optional fields unmapped
             </p>
             <p className={errors.length ? 'builder-error' : 'import-valid'}>

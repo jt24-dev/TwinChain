@@ -30,7 +30,7 @@ function checkFiles(format: 'excel' | 'csv', files: File[]) {
   if (
     format === 'excel'
       ? files.length !== 1
-      : files.length < 2 || files.length > 3
+      : files.length < 2 || files.length > 4
   )
     throw new Error('Select the required file or files first.');
   for (const file of files) {
@@ -53,13 +53,15 @@ export async function readImportSource(
 ): Promise<RawImportSource> {
   checkFiles(format, files);
   if (format === 'csv') {
-    const [facilities, routes, inventory] = await Promise.all(
+    const [facilities, routes, inventory, sourcing] = await Promise.all(
       files.map((file) => file.text()),
     );
     const facilityTable = parseCsv(facilities, 'Facilities');
     const routeTable = parseCsv(routes, 'Routes');
     const inventoryTable =
       inventory === undefined ? undefined : parseCsv(inventory, 'Inventory');
+    const sourcingTable =
+      sourcing === undefined ? undefined : parseCsv(sourcing, 'SKU Sourcing');
     return {
       sheets: [
         { name: 'Facilities', data: facilityTable.rows },
@@ -67,11 +69,15 @@ export async function readImportSource(
         ...(inventoryTable
           ? [{ name: 'Inventory', data: inventoryTable.rows }]
           : []),
+        ...(sourcingTable
+          ? [{ name: 'SKU Sourcing', data: sourcingTable.rows }]
+          : []),
       ],
       issues: [
         ...facilityTable.issues,
         ...routeTable.issues,
         ...(inventoryTable?.issues ?? []),
+        ...(sourcingTable?.issues ?? []),
       ],
       facilitySheet: 'Facilities',
       routeSheet: 'Routes',
@@ -112,6 +118,8 @@ export function previewMappedImport(
   routeMapping: ColumnMapping,
   inventorySheet = '',
   inventoryMapping?: ColumnMapping,
+  sourcingSheet = '',
+  sourcingMapping?: ColumnMapping,
 ): ImportPreview {
   const facilities = source.sheets.find(
     (sheet) => sheet.name === facilitySheet,
@@ -156,12 +164,29 @@ export function previewMappedImport(
         inventoryMapping?.fields ?? {},
       )
     : undefined;
+  const sourcing = sourcingSheet
+    ? applyColumnMapping(
+        source.sheets.find((s) => s.name === sourcingSheet)?.data ?? [],
+        'sourcing',
+        sourcingMapping?.fields ?? {},
+      )
+    : undefined;
   if (inventorySheet && [facilitySheet, routeSheet].includes(inventorySheet))
     selectionIssues.push({
       severity: 'error',
       table: 'Inventory',
       field: 'worksheet',
       message: 'Choose a separate inventory worksheet.',
+    });
+  if (
+    sourcingSheet &&
+    [facilitySheet, routeSheet, inventorySheet].includes(sourcingSheet)
+  )
+    selectionIssues.push({
+      severity: 'error',
+      table: 'SKU Sourcing',
+      field: 'worksheet',
+      message: 'Choose a separate SKU sourcing worksheet.',
     });
   return previewImport(
     mappedFacilities.table,
@@ -172,8 +197,10 @@ export function previewMappedImport(
       ...mappedFacilities.issues,
       ...mappedRoutes.issues,
       ...(inventory?.issues ?? []),
+      ...(sourcing?.issues ?? []),
     ],
     inventory?.table,
+    sourcing?.table,
   );
 }
 

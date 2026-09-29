@@ -1,6 +1,14 @@
-# TwinChain · v0.17
+# TwinChain · v0.18
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.18 SKU-Specific Sourcing Foundation
+
+An optional **SKU Sourcing** Excel worksheet or fourth CSV maps a SKU from a source facility to a destination facility over an existing directed route. A route ID can identify the exact lane and its transport mode. Multiple sources are supported. Provide a positive share for every source of a destination+SKU, totaling 100% (fractions or percentages on import), or leave all shares blank to split equally. Invalid references, duplicate relationships, mismatched routes, and inconsistent shares block import. Sourcing is stored with Custom Networks and JSON backups; the import preview shows relationship, SKU, and destination counts.
+
+For a facility shutdown, an unavailable source or associated route removes only its share of that SKU's normal supply. The existing demand × lost-supply fraction calculation then projects depletion and stockout. A healthy SKU at the same facility retains full supply. An SKU without sourcing keeps v0.17's facility-level supply-loss calculation, and old saved networks require no migration. The Inventory by SKU table shows sources, allocation, route mode, unavailable sources, lost and remaining supply, depletion, and stockout. Saved-scenario fingerprints include sourcing, so changes block stale reopen/comparison.
+
+Current mitigation remains facility-level: recovery is applied proportionally to each affected sourced SKU rather than selecting new suppliers or routes for individual SKUs. Sourcing requires an existing direct route, but route IDs are optional. Route closures, automatic sourcing decisions, purchase orders, costs, BOMs, forecasting, and replenishment remain future work.
 
 Product navigation uses dedicated `/product/`, `/how-it-works/`, and `/pricing/` pages with the shared public header and footer. The homepage retains concise Product and How It Works previews, while Try Demo and Open App continue to enter the existing Demo and workspace flows.
 

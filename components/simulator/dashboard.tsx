@@ -183,6 +183,7 @@ export function Dashboard() {
             shutdown,
             'custom',
             network.inventoryRecords,
+            network.skuSourcing,
           )
         : customBase,
     [network, shutdown, mode, customBase],
@@ -638,7 +639,7 @@ export function Dashboard() {
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.17 · Client-side demo ·
+              <span className="footer-dot" /> v0.18 · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>

@@ -15,6 +15,17 @@ export function SkuInventoryView({
   if (!network.inventoryRecords?.length) return null;
   const names = new Map(network.skus?.map((s) => [s.id, s.name]));
   const facilities = new Map(network.facilities.map((f) => [f.id, f.name]));
+  const routes = new Map(network.routes.map((r) => [r.id, r]));
+  const sourcingByPair = new Map<
+    string,
+    NonNullable<SupplyNetwork['skuSourcing']>
+  >();
+  for (const source of network.skuSourcing ?? []) {
+    const pair = JSON.stringify([source.destinationFacilityId, source.skuId]);
+    const group = sourcingByPair.get(pair) ?? [];
+    group.push(source);
+    sourcingByPair.set(pair, group);
+  }
   const projections = new Map(
     result.facilities.flatMap((f) =>
       (f.skuInventory ?? []).map(
@@ -34,6 +45,8 @@ export function SkuInventoryView({
     n === undefined
       ? '—'
       : n.toLocaleString('en-US', { maximumFractionDigits: 1 });
+  const percent = (fraction: number) =>
+    `${(fraction * 100).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`;
   return (
     <section className="inventory-summary" aria-label="Inventory by SKU">
       <strong>
@@ -43,6 +56,12 @@ export function SkuInventoryView({
         {records.length} facility-SKU records. Quantities are shown per SKU;
         units may differ.
       </p>
+      {!!network.skuSourcing?.length && (
+        <p>
+          {network.skuSourcing.length} SKU sourcing relationships in this
+          network.
+        </p>
+      )}
       {result.active && (
         <p>
           {stockouts.length} facility-SKUs at risk ·{' '}
@@ -75,6 +94,9 @@ export function SkuInventoryView({
               <th>Facility / SKU</th>
               <th>On hand</th>
               <th>Daily demand</th>
+              <th>Sources</th>
+              <th>Supply lost / remaining</th>
+              <th>Daily depletion</th>
               <th>Projected stockout</th>
             </tr>
           </thead>
@@ -82,6 +104,7 @@ export function SkuInventoryView({
             {records.slice(0, expanded ? records.length : 8).map((r) => {
               const key = JSON.stringify([r.facilityId, r.skuId]),
                 projection = projections.get(key);
+              const sources = sourcingByPair.get(key) ?? [];
               return (
                 <tr key={key}>
                   <td>
@@ -90,6 +113,47 @@ export function SkuInventoryView({
                   </td>
                   <td>{number(r.currentInventory)}</td>
                   <td>{number(r.dailyDemand)}</td>
+                  <td>
+                    {sources.length ? (
+                      <details>
+                        <summary>
+                          {sources.length}{' '}
+                          {sources.length === 1 ? 'source' : 'sources'}
+                        </summary>
+                        <ul>
+                          {sources.map((source) => (
+                            <li
+                              key={JSON.stringify([
+                                source.sourceFacilityId,
+                                source.routeId,
+                              ])}
+                            >
+                              {facilities.get(source.sourceFacilityId)} —{' '}
+                              {percent(
+                                source.supplyShare ?? 1 / sources.length,
+                              )}
+                              {source.routeId
+                                ? ` · ${routes.get(source.routeId)?.mode}`
+                                : ''}
+                              {projection?.disruptedSourceIds?.includes(
+                                source.sourceFacilityId,
+                              )
+                                ? ' · unavailable'
+                                : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : (
+                      'Facility-level fallback'
+                    )}
+                  </td>
+                  <td>
+                    {projection
+                      ? `${percent(1 - projection.supplyAvailability)} lost · ${percent(projection.supplyAvailability)} remaining`
+                      : '—'}
+                  </td>
+                  <td>{number(projection?.dailyDepletion)}</td>
                   <td>
                     {!result.active
                       ? 'Run a disruption'
@@ -113,8 +177,9 @@ export function SkuInventoryView({
         </button>
       )}
       <small>
-        Each SKU uses the facility-level supply-loss fraction. SKU-specific
-        sourcing is not modeled.
+        Explicit sources determine SKU supply loss; unsourced SKUs use the
+        existing facility-level calculation. Unspecified shares split equally
+        among sources.
       </small>
     </section>
   );

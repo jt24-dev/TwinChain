@@ -104,7 +104,6 @@ export function validateNetwork(network: SupplyNetwork): void {
     )
       throw new Error('Invalid facility coordinates.');
   }
-  validateSkuData(network, ids);
   const routeIds = new Set<string>(),
     connections = new Set<string>();
   for (const r of network.routes) {
@@ -126,6 +125,7 @@ export function validateNetwork(network: SupplyNetwork): void {
       );
     connections.add(connection);
   }
+  validateSkuData(network, ids, network.routes);
 }
 export function createNetwork(id: string): SupplyNetwork {
   const network: SupplyNetwork = {
@@ -191,6 +191,12 @@ export function editNetwork(
         next.inventoryRecords = network.inventoryRecords.filter(
           (r) => r.facilityId !== edit.id,
         );
+      if (edit.type === 'delete-facility' && network.skuSourcing)
+        next.skuSourcing = network.skuSourcing.filter(
+          (s) =>
+            s.sourceFacilityId !== edit.id &&
+            s.destinationFacilityId !== edit.id,
+        );
       if (edit.type === 'delete-facility')
         next.routes = network.routes.filter(
           (r) => r.from !== edit.id && r.to !== edit.id,
@@ -209,6 +215,42 @@ export function editNetwork(
               r.id === edit.id ? { ...r, ...edit.changes } : r,
             )
           : network.routes.filter((r) => r.id !== edit.id);
+      if (network.skuSourcing) {
+        const directed = new Set(
+          next.routes.map((r) => JSON.stringify([r.from, r.to])),
+        );
+        const routeById = new Map(next.routes.map((r) => [r.id, r]));
+        next.skuSourcing = network.skuSourcing
+          .filter((s) =>
+            directed.has(
+              JSON.stringify([s.sourceFacilityId, s.destinationFacilityId]),
+            ),
+          )
+          .map((s) => {
+            const route = routeById.get(s.routeId ?? '');
+            return s.routeId &&
+              (!route ||
+                route.from !== s.sourceFacilityId ||
+                route.to !== s.destinationFacilityId)
+              ? { ...s, routeId: undefined }
+              : s;
+          });
+      }
+  }
+  if (network.skuSourcing && next.skuSourcing) {
+    // Removing one source from a fully allocated group would leave invalid partial
+    // shares. Drop that group's sourcing metadata instead of inventing new shares.
+    const pair = (s: { destinationFacilityId: string; skuId: string }) =>
+      JSON.stringify([s.destinationFacilityId, s.skuId]);
+    const counts = new Map<string, number>();
+    for (const source of network.skuSourcing)
+      counts.set(pair(source), (counts.get(pair(source)) ?? 0) + 1);
+    const retained = new Map<string, number>();
+    for (const source of next.skuSourcing)
+      retained.set(pair(source), (retained.get(pair(source)) ?? 0) + 1);
+    next.skuSourcing = next.skuSourcing.filter(
+      (source) => retained.get(pair(source)) === counts.get(pair(source)),
+    );
   }
   validateNetwork(next);
   return next;

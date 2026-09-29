@@ -85,6 +85,9 @@ export function scenarioNetworkFingerprint(network: SupplyNetwork) {
     ...(network.inventoryRecords?.length
       ? { inventoryRecords: network.inventoryRecords }
       : {}),
+    ...(network.skuSourcing?.length
+      ? { skuSourcing: network.skuSourcing }
+      : {}),
   });
   let hash = 2166136261;
   for (let index = 0; index < source.length; index++) {
@@ -406,6 +409,7 @@ export function reproduceSavedScenario(
       scenario.disruption,
       'custom',
       network.inventoryRecords,
+      network.skuSourcing,
     );
     return {
       ok: true,

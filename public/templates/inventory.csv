@@ -1,0 +1,4 @@
+sku_id,sku_name,facility_id,current_inventory,daily_demand
+SKU-A,Component A,FAC-01,120,10
+SKU-A,Component A,DC-01,80,8
+SKU-B,Component B,DC-01,100,5

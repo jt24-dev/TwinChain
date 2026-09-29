@@ -1,4 +1,4 @@
-import type { FacilityInventory } from '../sku-inventory.ts';
+import type { FacilityInventory, SkuSourcing } from '../sku-inventory.ts';
 import type { Facility, Route } from '../data/network.ts';
 import {
   baseline,
@@ -62,6 +62,7 @@ export function runFacilityShutdown(
   input: FacilityShutdown,
   profile: 'custom' | 'demo' = 'custom',
   inventoryRecords?: FacilityInventory[],
+  skuSourcing?: SkuSourcing[],
 ): SimulationResult {
   if (input.type !== 'facility-shutdown')
     throw new Error('Unsupported disruption type.');
@@ -81,6 +82,8 @@ export function runFacilityShutdown(
   );
   if (inventoryRecords?.length)
     result.inventoryRecords = inventoryRecords.map((r) => ({ ...r }));
+  if (skuSourcing?.length)
+    result.skuSourcing = skuSourcing.map((s) => ({ ...s }));
   if (profile === 'demo')
     return applyInventoryImpact(result, input.durationDays, profile);
   return calculateCustomImpact(result, input.durationDays);

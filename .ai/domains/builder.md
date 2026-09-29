@@ -54,3 +54,5 @@ Route direction is structural (`from → to`). Supported modes are Ocean, Truck,
 ## Usually Unrelated
 
 Avoid disruption coefficients, inventory/KPI calculations, mitigation rules, homepage/Pricing content, Natural Earth data, and generated output. Builder changes generally should not require separate imported-network logic.
+
+v0.18 sourcing is imported or restored rather than edited in a dedicated builder form. Facility deletion removes its incoming/outgoing sourcing records. Route deletion or endpoint changes remove relationships with no remaining direct route; if another direct route remains, stale route IDs are detached. When a removed source would leave a partial allocation, the entire destination+SKU sourcing group is removed rather than silently changing shares. All changes pass shared network validation.

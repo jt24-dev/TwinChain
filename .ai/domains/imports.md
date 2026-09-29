@@ -65,3 +65,5 @@ Avoid map geometry, visual builder interaction, simulation formulas, mitigation 
 ## v0.17 inventory input
 
 Optional third CSV or selected Excel Inventory/SKUs worksheet uses the same column mapper. lib/import/sku-import.ts validates combined SKU identity + facility inventory rows, consistent names, references, nonnegative values and unique facility/SKU pairs. Blank inventory/demand remains absent and warns. Preview includes SKU/record/facility counts; creation stays atomic. Up to 20,000 inventory rows per import.
+
+v0.18 accepts an optional SKU Sourcing sheet or fourth CSV after Inventory. `lib/import/sourcing-import.ts` validates SKU/facility/route IDs, directional routes, duplicates, and complete share groups; mapped aliases and manual overrides use the existing column mapper. Shares import as fractions or percentages and persist as 0–1. Preview includes relationship, sourced-SKU, and destination counts. Inventory remains optional for old imports but is needed to define SKU IDs for sourcing.

@@ -1,4 +1,5 @@
 import type { Facility } from '../data/network.ts';
+import type { SkuSourcing } from '../sku-inventory.ts';
 import { inventoryCoverage } from '../operations.ts';
 import {
   baseline,
@@ -10,7 +11,8 @@ import {
 export interface InventoryImpact {
   state: 'protected' | 'stockout' | 'no-data';
   supplyAvailability: number;
-  supplyBasis: 'route-count' | 'route-capacity' | 'mitigation';
+  supplyBasis: 'route-count' | 'route-capacity' | 'sku-sourcing' | 'mitigation';
+  disruptedSourceIds?: string[];
   startingInventory?: number;
   dailyDemand?: number;
   coverageDays?: number;
@@ -61,7 +63,11 @@ export function calculateInventoryImpact(
   durationDays: number,
   supply:
     | ReturnType<typeof calculateSupplyAvailability>
-    | { supplyAvailability: number; supplyBasis: 'mitigation' },
+    | {
+        supplyAvailability: number;
+        supplyBasis: 'mitigation' | 'sku-sourcing';
+        disruptedSourceIds?: string[];
+      },
 ): InventoryImpact {
   if (
     !Number.isFinite(durationDays) ||
@@ -132,6 +138,20 @@ export function applyInventoryImpact(
     group.push(record);
     recordsByFacility.set(record.facilityId, group);
   }
+  const sourcingByPair = new Map<string, SkuSourcing[]>();
+  for (const sourcing of result.skuSourcing ?? []) {
+    const pair = JSON.stringify([
+      sourcing.destinationFacilityId,
+      sourcing.skuId,
+    ]);
+    const group = sourcingByPair.get(pair) ?? [];
+    group.push(sourcing);
+    sourcingByPair.set(pair, group);
+  }
+  const sourceById = new Map(
+    result.facilities.map((facility) => [facility.id, facility]),
+  );
+  const routeById = new Map(result.routes.map((route) => [route.id, route]));
   const facilities = result.facilities.map((f) => {
     if (!f.impact || f.impact.hops === 0) return f;
     const supply =
@@ -150,10 +170,56 @@ export function applyInventoryImpact(
         ...f,
         inventory: calculateInventoryImpact(f, durationDays, supply),
       };
-    const skuInventory = records.map((record) => ({
-      ...record,
-      projection: calculateInventoryImpact(record, durationDays, supply),
-    }));
+    const skuInventory = records.map((record) => {
+      const sources = sourcingByPair.get(JSON.stringify([f.id, record.skuId]));
+      if (!sources?.length)
+        return {
+          ...record,
+          projection: calculateInventoryImpact(record, durationDays, supply),
+        };
+      const equalShare = 1 / sources.length;
+      const disruptedSourceIds: string[] = [];
+      const available = sources.reduce((sum, source) => {
+        const sourceUnavailable =
+          sourceById.get(source.sourceFacilityId)?.status !== 'operational';
+        const routeUnavailable =
+          source.routeId !== undefined &&
+          routeById.get(source.routeId)?.status !== 'operational';
+        if (sourceUnavailable || routeUnavailable) {
+          disruptedSourceIds.push(source.sourceFacilityId);
+          return sum;
+        }
+        return sum + (source.supplyShare ?? equalShare);
+      }, 0);
+      // Existing mitigation restores a fraction of the facility's lost flow. Apply
+      // that fraction only to this SKU's unavailable sources; healthy SKUs stay whole.
+      const originalFacilityAvailability = calculateSupplyAvailability(
+        inbound.get(f.id) ?? [],
+      ).supplyAvailability;
+      const recoveredFraction =
+        f.mitigation && originalFacilityAvailability < 1
+          ? Math.max(
+              0,
+              Math.min(
+                1,
+                (supply.supplyAvailability - originalFacilityAvailability) /
+                  (1 - originalFacilityAvailability),
+              ),
+            )
+          : 0;
+      const supplyAvailability = Math.max(
+        0,
+        Math.min(1, available + (1 - available) * recoveredFraction),
+      );
+      return {
+        ...record,
+        projection: calculateInventoryImpact(record, durationDays, {
+          supplyAvailability,
+          supplyBasis: recoveredFraction ? 'mitigation' : 'sku-sourcing',
+          disruptedSourceIds,
+        }),
+      };
+    });
     const stockouts = skuInventory.filter(
       (r) => r.projection.state === 'stockout',
     );
