@@ -13,10 +13,19 @@ test('Free CTA and Demo links select their existing product entry flows', () => 
     assert.equal(productEntry(url.search), entry);
   }
 });
-test('Product anchors explicitly return to Home from a saved session', () => {
-  const url = new URL(`${productLinks.home}#product`, 'http://localhost');
+test('Product and How It Works use dedicated routes without Home anchors', () => {
+  const productUrl = new URL(productLinks.product, 'http://localhost');
+  const howUrl = new URL(productLinks.howItWorks, 'http://localhost');
+
+  assert.equal(productUrl.pathname, '/product/');
+  assert.equal(howUrl.pathname, '/how-it-works/');
+  assert.equal(productUrl.hash, '');
+  assert.equal(howUrl.hash, '');
+});
+test('Dedicated marketing routes do not alter Home entry resolution', () => {
+  const url = new URL(productLinks.home, 'http://localhost');
   assert.equal(resolveProductEntry(url.search), 'home');
-  assert.equal(url.hash, '#product');
+  assert.equal(url.hash, '');
 });
 test('Root always resolves to Home independently of stored networks', () => {
   assert.equal(resolveProductEntry(''), 'home');

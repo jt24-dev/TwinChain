@@ -9,6 +9,7 @@ export function ProductHeader({
   onDemo,
   onOpenApp,
   ready = true,
+  current,
   pricing = false,
   workspace = false,
 }: {
@@ -17,10 +18,12 @@ export function ProductHeader({
   onDemo?: () => void;
   onOpenApp?: () => void;
   ready?: boolean;
+  current?: 'home' | 'product' | 'how-it-works' | 'pricing';
   pricing?: boolean;
   workspace?: boolean;
 }) {
-  const home = pricing || workspace ? productLinks.home : '';
+  const active =
+    current ?? (pricing ? 'pricing' : workspace ? undefined : 'home');
   return (
     <header className="app-header home-header">
       <div className="brand">
@@ -47,12 +50,27 @@ export function ProductHeader({
         </div>
       </div>
       <nav className="home-nav" aria-label="Main navigation">
-        {workspace && <a href={productLinks.home}>Home</a>}
-        <a href={`${home}#product`}>Product</a>
-        <a href={`${home}#how-it-works`}>How It Works</a>
+        <a
+          href={productLinks.home}
+          aria-current={active === 'home' ? 'page' : undefined}
+        >
+          Home
+        </a>
+        <a
+          href={productLinks.product}
+          aria-current={active === 'product' ? 'page' : undefined}
+        >
+          Product
+        </a>
+        <a
+          href={productLinks.howItWorks}
+          aria-current={active === 'how-it-works' ? 'page' : undefined}
+        >
+          How It Works
+        </a>
         <a
           href={productLinks.pricing}
-          aria-current={pricing ? 'page' : undefined}
+          aria-current={active === 'pricing' ? 'page' : undefined}
         >
           Pricing
         </a>
@@ -88,12 +106,14 @@ export function ProductHeader({
 
 export function ProductFooter({
   onAbout,
+  current,
   pricing = false,
 }: {
   onAbout: () => void;
+  current?: 'home' | 'product' | 'how-it-works' | 'pricing';
   pricing?: boolean;
 }) {
-  const home = pricing ? productLinks.home : '';
+  const active = current ?? (pricing ? 'pricing' : 'home');
   return (
     <footer className="home-footer">
       <div className="home-footer-top">
@@ -102,11 +122,27 @@ export function ProductFooter({
           <p>Built for supply chain resilience analysis.</p>
         </div>
         <nav aria-label="Footer navigation">
-          <a href={`${home}#product`}>Product</a>
-          <a href={`${home}#how-it-works`}>How It Works</a>
+          <a
+            href={productLinks.home}
+            aria-current={active === 'home' ? 'page' : undefined}
+          >
+            Home
+          </a>
+          <a
+            href={productLinks.product}
+            aria-current={active === 'product' ? 'page' : undefined}
+          >
+            Product
+          </a>
+          <a
+            href={productLinks.howItWorks}
+            aria-current={active === 'how-it-works' ? 'page' : undefined}
+          >
+            How It Works
+          </a>
           <a
             href={productLinks.pricing}
-            aria-current={pricing ? 'page' : undefined}
+            aria-current={active === 'pricing' ? 'page' : undefined}
           >
             Pricing
           </a>

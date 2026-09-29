@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ProductFooter } from './product-navigation';
 import type { SupplyNetwork } from '@/lib/networks';
+import { productLinks } from '@/lib/product-entry';
 import {
   ArrowRight,
   Boxes,
@@ -183,6 +184,14 @@ export function ProductHome({
             </article>
           ))}
         </div>
+        <Button
+          className="home-section-link"
+          variant="link"
+          nativeButton={false}
+          render={<a href={productLinks.product} />}
+        >
+          Explore the product <ArrowRight aria-hidden="true" />
+        </Button>
       </section>
 
       <section
@@ -220,8 +229,16 @@ export function ProductHome({
             </p>
           </li>
         </ol>
+        <Button
+          className="home-section-link"
+          variant="link"
+          nativeButton={false}
+          render={<a href={productLinks.howItWorks} />}
+        >
+          See how it works <ArrowRight aria-hidden="true" />
+        </Button>
         <Button variant="link" onClick={onAbout}>
-          Understand the methodology <ArrowRight aria-hidden="true" />
+          Understand the methodology
         </Button>
       </section>
 

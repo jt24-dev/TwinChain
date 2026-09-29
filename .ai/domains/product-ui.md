@@ -2,14 +2,15 @@
 
 ## Responsibility
 
-Provide the public Home/Pricing/About shell, explicit product entry flows, workspace selection, and the stable simulator composition around shared map, KPI, controls, and result areas. This domain coordinates state and presentation; simulation/import/model calculations stay in their own modules.
+Provide the public Home/Product/How It Works/Pricing/About shell, explicit product entry flows, workspace selection, and the stable simulator composition around shared map, KPI, controls, and result areas. This domain coordinates state and presentation; simulation/import/model calculations stay in their own modules.
 
 ## Key Files
 
 - `app/page.tsx` and `components/simulator/dashboard.tsx` — main entry and product/simulator orchestration.
-- `lib/product-entry.ts` — canonical Home, workspace, Demo, selected-network, and Pricing links/query parsing.
+- `lib/product-entry.ts` — canonical Home, Product, How It Works, workspace, Demo, selected-network, and Pricing links/query parsing.
 - `components/simulator/product-navigation.tsx` — shared header/footer navigation.
 - `components/simulator/product-home.tsx` and `product-preview.tsx` — homepage content and real Demo-derived preview.
+- `app/product/page.tsx`, `app/how-it-works/page.tsx`, `product-page.tsx`, and `how-it-works-page.tsx` — dedicated product and workflow marketing pages.
 - `components/simulator/workspace-home.tsx` — saved networks plus Create/Import/Demo entry.
 - `app/pricing/page.tsx` and `components/simulator/pricing-page.tsx` — dedicated Pricing route/content.
 - `components/simulator/product-info.tsx` — About/Methodology dialog and privacy/local-data explanation.
@@ -22,7 +23,7 @@ Provide the public Home/Pricing/About shell, explicit product entry flows, works
 
 `app/page.tsx` renders `Dashboard`. `resolveProductEntry` maps missing/unknown query state to Home. `/` always opens Home. `/?view=app` opens the workspace chooser; `/?view=demo` selects Demo and Simulate mode; `/?view=network` opens the currently selected network. `Dashboard.navigate` updates browser history, and a `popstate` listener restores entry state.
 
-Try Demo explicitly selects the built-in Demo Network. Open App opens the general workspace where saved networks can be continued and new/import flows started. Selecting or creating a network opens its shared simulator; imported networks enter Build mode. Pricing is a dedicated static route. About and Methodology use the same dialog from the homepage, simulator, and Pricing page.
+Try Demo explicitly selects the built-in Demo Network. Open App opens the general workspace where saved networks can be continued and new/import flows started. Selecting or creating a network opens its shared simulator; imported networks enter Build mode. Product, How It Works, and Pricing are dedicated static routes. About and Methodology use the same dialog throughout the public shell and simulator.
 
 Within the simulator, `Dashboard` derives one current result and renders KPI cards above a two-column workspace: map plus context on the left, Build or Simulate controls on the right. The stable `simulation-results` section follows the workspace and contains mitigation comparison/inventory results. This placement prevents result expansion from moving/resizing the map. KPI value and footer regions reserve stable space.
 
@@ -35,8 +36,8 @@ Scenario comparison remains inside the same stable results area. Users select tw
 - `/` opens Home for new and returning sessions.
 - Try Demo and Open App are intentionally different: direct guided Demo vs general workspace/network selection.
 - Saved network selection persists independently of product entry state.
-- Home, Pricing, About/Methodology, and workspace access remain available consistently across Home, simulator, Build, import, and Pricing states.
-- Product/How It Works anchors return to Home before targeting sections when invoked elsewhere.
+- Home, Product, How It Works, Pricing, About/Methodology, and workspace access remain available consistently across the public shell and simulator states.
+- Product and How It Works navigation always uses their dedicated routes; the similarly named homepage sections are teasers.
 - Import is a modal flow and invalid/cancelled imports leave the active network unchanged.
 - The map is the simulator’s visual anchor. Running/resetting a disruption or switching mitigation must not shift KPI cards or resize/reposition the map.
 - Result panels should expand below the workspace and clear gracefully on reset.
@@ -58,7 +59,7 @@ There is no broad component test suite; browser checks should be tightly targete
 ## Common Change Areas
 
 - Entry/navigation: `product-entry.ts`, `dashboard.tsx`, shared navigation, and product-entry tests.
-- Home/workspace/Pricing copy/layout: respective components and scoped CSS.
+- Home/Product/How It Works/workspace/Pricing copy and layout: respective components and scoped CSS.
 - Simulator composition/stability: `dashboard.tsx`, KPI/result components, and responsive CSS; avoid touching formulas.
 - About/Methodology/privacy copy: `product-info.tsx` and shared footer usage.
 

@@ -2,11 +2,11 @@
 
 ## Application Entry and Routing
 
-TwinChain uses React with Vinext/Next-style App Router files. `app/layout.tsx` defines global metadata, fonts, viewport settings, and `app/globals.css`. `app/page.tsx` renders `components/simulator/dashboard.tsx` inside `product-boundary.tsx`. `app/pricing/page.tsx` is the dedicated Pricing route.
+TwinChain uses React with Vinext/Next-style App Router files. `app/layout.tsx` defines global metadata, fonts, viewport settings, and `app/globals.css`. `app/page.tsx` renders `components/simulator/dashboard.tsx` inside `product-boundary.tsx`. Product, How It Works, and Pricing use dedicated routes under `app/product`, `app/how-it-works`, and `app/pricing`.
 
 The main page uses URL query state rather than separate simulator pages. `lib/product-entry.ts` defines `/` for Home, `/?view=app` for the workspace chooser, `/?view=demo` for direct Demo entry, and `/?view=network` for the selected simulator workspace. `Dashboard` synchronizes these views with browser history. `/` defaults to Home even when local networks exist. About/Methodology is a dialog (`product-info.tsx`), not a route. `product-navigation.tsx` supplies shared header/footer navigation.
 
-Home content is in `product-home.tsx`; the saved-network chooser is `workspace-home.tsx`; Pricing content is `pricing-page.tsx`. `Dashboard` owns the selected product view, Build/Simulate mode, active disruption, facility selection, and mitigation selections.
+Home content is in `product-home.tsx`; dedicated marketing content is in `product-page.tsx` and `how-it-works-page.tsx`; the saved-network chooser is `workspace-home.tsx`; Pricing content is `pricing-page.tsx`. `Dashboard` owns the selected product view, Build/Simulate mode, active disruption, facility selection, and mitigation selections.
 
 ## Core Data Model
 
@@ -89,7 +89,7 @@ The project uses npm and requires Node 22.13 or newer. Commands are:
 - Production build: `npm run build`
 - Lint/format when needed: `npm run lint`, `npm run format`
 
-Vinext exports the static client to `dist/client`; `scripts/prepare-static-routes.mjs` adds a directory-style Pricing entry for plain static servers. Build/server artifacts under `dist/`, dependencies under `node_modules/`, and the known untracked nested `TwinChain/` repository are not architectural source and should normally be ignored. Do not modify the nested repository.
+Vinext exports the static client to `dist/client`; `scripts/prepare-static-routes.mjs` adds directory-style Product, How It Works, and Pricing entries for plain static servers. Build/server artifacts under `dist/`, dependencies under `node_modules/`, and the known untracked nested `TwinChain/` repository are not architectural source and should normally be ignored. Do not modify the nested repository.
 
 ## v0.17 SKU foundation
 

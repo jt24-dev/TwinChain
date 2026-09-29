@@ -3,6 +3,8 @@ export const productLinks = {
   network: '/?view=network',
   app: '/?view=app',
   demo: '/?view=demo',
+  product: '/product/',
+  howItWorks: '/how-it-works/',
   pricing: '/pricing/',
 } as const;
 

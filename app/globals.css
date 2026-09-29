@@ -3426,6 +3426,13 @@ select:focus-visible {
   .home-nav-actions svg {
     display: none;
   }
+  .home-nav {
+    gap: 10px 14px;
+  }
+  .home-nav a,
+  .home-nav button {
+    font-size: 12px;
+  }
   .home-overline {
     font-size: 11px;
     letter-spacing: 0.055em;
@@ -3640,6 +3647,99 @@ select:focus-visible {
 .pricing-page .home-footer {
   margin-top: 64px;
 }
+
+/* Dedicated Product and How It Works pages reuse the public product shell. */
+.marketing-hero {
+  max-width: 900px;
+  padding: 72px 0 52px;
+}
+.marketing-hero h2 {
+  margin: 18px 0 22px;
+  font-size: clamp(36px, 4vw, 54px);
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.marketing-hero h2 em {
+  color: #90cfbf;
+  font-style: normal;
+}
+.marketing-hero > p {
+  max-width: 720px;
+  color: var(--home-muted);
+  font-size: 17px;
+  line-height: 1.75;
+}
+.product-problem {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 64px;
+  padding: 38px;
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-radius);
+  background: var(--home-surface);
+}
+.product-problem h2,
+.marketing-cta h2 {
+  margin: 12px 0 0;
+  font-size: clamp(25px, 2.5vw, 34px);
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+.product-problem > p,
+.marketing-cta p {
+  align-self: center;
+  color: var(--home-muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+.marketing-capability-grid {
+  margin-top: 36px;
+}
+.marketing-capability-grid article:nth-child(n + 5) {
+  border-top: 1px solid var(--home-border);
+}
+.home-section-link {
+  margin-top: 18px;
+  padding-left: 0;
+  color: var(--home-accent);
+  gap: 10px;
+}
+.workflow-journey {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 42px;
+}
+.workflow-journey li:nth-child(n + 4) {
+  margin-top: 12px;
+}
+.workflow-note {
+  margin-top: 68px;
+}
+.marketing-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  margin: 72px 0;
+  padding: 34px 38px;
+  border: 1px solid #527769;
+  border-radius: var(--home-radius);
+  background: #152932;
+}
+.marketing-cta > div {
+  max-width: 760px;
+}
+.marketing-cta p {
+  margin-top: 12px;
+}
+.marketing-cta .home-button {
+  flex-shrink: 0;
+}
+.marketing-page .home-footer {
+  margin-top: 0;
+}
 @media (max-width: 700px) {
   .plan-grid {
     grid-template-columns: 1fr;
@@ -3660,6 +3760,26 @@ select:focus-visible {
   }
   .pricing-comparison thead th {
     font-size: 15px;
+  }
+  .marketing-hero {
+    padding: 44px 0 38px;
+  }
+  .product-problem {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 26px;
+  }
+  .workflow-journey {
+    grid-template-columns: 1fr;
+  }
+  .workflow-journey li:nth-child(n + 4) {
+    margin-top: 0;
+  }
+  .marketing-cta {
+    align-items: flex-start;
+    flex-direction: column;
+    margin: 52px 0;
+    padding: 28px;
   }
 }
 /* v0.12C: keep the map/KPI anchor stable while results expand below it. */

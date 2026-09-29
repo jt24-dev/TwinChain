@@ -2,6 +2,8 @@
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
 
+Product navigation uses dedicated `/product/`, `/how-it-works/`, and `/pricing/` pages with the shared public header and footer. The homepage retains concise Product and How It Works previews, while Try Demo and Open App continue to enter the existing Demo and workspace flows.
+
 ## v0.17 SKU / Inventory Foundation
 
 Networks may now include optional `skus` (unique ID and name) and `inventoryRecords` linking a facility ID and SKU ID to optional current inventory and daily demand. Old networks and JSON backups need no migration. Source records persist through the existing local network storage and JSON backup allowlist; projections never persist. Deleting a facility removes its inventory records. Scenario fingerprints include populated SKU data, and reopen recomputes results.
