@@ -1,3 +1,5 @@
+import { parseSkuInventory } from './sku-import.ts';
+import { copySkuData, type SkuData } from '../sku-inventory.ts';
 import Papa from 'papaparse';
 import { importOperations } from '../operations.ts';
 import {
@@ -22,7 +24,7 @@ export interface ImportIssue {
   field: string;
   message: string;
 }
-export interface ImportPreview {
+export interface ImportPreview extends SkuData {
   facilities: Facility[];
   routes: Route[];
   issues: ImportIssue[];
@@ -91,6 +93,7 @@ export function previewImport(
   facilityTable: ImportTable,
   routeTable: ImportTable,
   initialIssues: ImportIssue[] = [],
+  inventoryTable?: ImportTable,
 ): ImportPreview {
   const issues = [...initialIssues];
   const facilities: Facility[] = [],
@@ -341,7 +344,14 @@ export function previewImport(
         message: `${components} disconnected components. Disruptions cannot propagate between them.`,
       });
   }
+  const skuData = inventoryTable
+    ? parseSkuInventory(inventoryTable, new Set(facilities.map((f) => f.id)))
+    : undefined;
+  if (skuData) issues.push(...skuData.issues);
   return {
+    ...(skuData
+      ? { skus: skuData.skus, inventoryRecords: skuData.inventoryRecords }
+      : {}),
     facilities,
     routes,
     issues,
@@ -362,6 +372,7 @@ export function createImportedNetwork(
     id,
     name: name.trim(),
     kind: 'custom',
+    ...copySkuData(preview),
     facilities: preview.facilities.map((f) => ({ ...f })),
     routes: preview.routes.map((r) => ({ ...r })),
   };

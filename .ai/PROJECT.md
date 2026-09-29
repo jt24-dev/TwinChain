@@ -21,7 +21,7 @@ The product includes:
 - Deterministic downstream disruption propagation, inventory depletion, projected stockouts, KPI impact, Demo mitigation, and targeted Custom Network mitigation.
 - Separate local Scenario History for named Demo or Custom disruption/mitigation inputs, with deterministic reopen, network-change safety, and compact KPI/risk snapshots.
 - Session-only comparison of two to four saved scenarios from the same unchanged network, with factual KPI/stockout tradeoffs and direct reopen.
-- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is approximately 166 tests.
+- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is 185 tests.
 
 ## Technical Philosophy
 
@@ -40,3 +40,7 @@ Simulation correctness and source-data immutability come first. Visual polish an
 Changes should be incremental and narrowly scoped. Read the relevant domain file under `.ai/domains/`, then inspect only its listed source and tests. Avoid broad refactors, duplicate pipelines, and unrelated cleanup. Run focused tests first; broaden validation only when the change crosses shared data/simulation layers or the request requires it.
 
 Token and session efficiency are explicit project priorities. Trust these context files until code evidence shows they are stale. Update the relevant context document when a completed architectural change makes it materially inaccurate.
+
+## v0.17 SKU foundation
+
+Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-inventory.ts and lib/networks.ts. Legacy absent arrays remain absent. Inventory records take precedence per facility; the existing inventory pass projects each record using facility supply availability and rolls up counts/earliest day. Result records survive mitigation recalculation. Scenario fingerprints include populated SKU data and reopen passes records to runFacilityShutdown. The compact SKU table is below the map.

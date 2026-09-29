@@ -68,7 +68,7 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 ## Testing
 
-Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains approximately 166 tests. Major groups include:
+Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains 185 tests. Major groups include:
 
 - `propagation.test.mjs`, `facility-shutdown.test.mjs`, `inventory.test.mjs`
 - `mitigation.test.mjs`, `custom-mitigation.test.mjs`, `scenario.test.mjs`
@@ -90,3 +90,7 @@ The project uses npm and requires Node 22.13 or newer. Commands are:
 - Lint/format when needed: `npm run lint`, `npm run format`
 
 Vinext exports the static client to `dist/client`; `scripts/prepare-static-routes.mjs` adds a directory-style Pricing entry for plain static servers. Build/server artifacts under `dist/`, dependencies under `node_modules/`, and the known untracked nested `TwinChain/` repository are not architectural source and should normally be ignored. Do not modify the nested repository.
+
+## v0.17 SKU foundation
+
+Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-inventory.ts and lib/networks.ts. Legacy absent arrays remain absent. Inventory records take precedence per facility; the existing inventory pass projects each record using facility supply availability and rolls up counts/earliest day. Result records survive mitigation recalculation. Scenario fingerprints include populated SKU data and reopen passes records to runFacilityShutdown. The compact SKU table is below the map.

@@ -57,7 +57,7 @@ export function calculateSupplyAvailability(inbound: readonly ImpactedRoute[]) {
 }
 
 export function calculateInventoryImpact(
-  facility: Facility,
+  facility: Pick<Facility, 'currentInventory' | 'dailyDemand'>,
   durationDays: number,
   supply:
     | ReturnType<typeof calculateSupplyAvailability>
@@ -123,6 +123,15 @@ export function applyInventoryImpact(
     edges.push(route);
     inbound.set(route.to, edges);
   }
+  const recordsByFacility = new Map<
+    string,
+    NonNullable<SimulationResult['inventoryRecords']>
+  >();
+  for (const record of result.inventoryRecords ?? []) {
+    const group = recordsByFacility.get(record.facilityId) ?? [];
+    group.push(record);
+    recordsByFacility.set(record.facilityId, group);
+  }
   const facilities = result.facilities.map((f) => {
     if (!f.impact || f.impact.hops === 0) return f;
     const supply =
@@ -135,9 +144,41 @@ export function applyInventoryImpact(
             (f.mitigation.emergencyProtection || f.impact.severity === 'normal')
           ? { supplyAvailability: 1, supplyBasis: 'mitigation' as const }
           : calculateSupplyAvailability(inbound.get(f.id) ?? []);
+    const records = recordsByFacility.get(f.id);
+    if (!records?.length)
+      return {
+        ...f,
+        inventory: calculateInventoryImpact(f, durationDays, supply),
+      };
+    const skuInventory = records.map((record) => ({
+      ...record,
+      projection: calculateInventoryImpact(record, durationDays, supply),
+    }));
+    const stockouts = skuInventory.filter(
+      (r) => r.projection.state === 'stockout',
+    );
+    const noData = skuInventory.filter(
+      (r) => r.projection.state === 'no-data',
+    ).length;
+    const earliestStockoutDay = stockouts.length
+      ? Math.min(...stockouts.map((r) => r.projection.projectedStockoutDay!))
+      : undefined;
+    // SKU records take precedence. Counts/earliest day do not combine incompatible quantities.
+    const inventory: InventoryImpact = {
+      ...supply,
+      state: stockouts.length ? 'stockout' : noData ? 'no-data' : 'protected',
+      projectedStockoutDay: earliestStockoutDay,
+    };
     return {
       ...f,
-      inventory: calculateInventoryImpact(f, durationDays, supply),
+      inventory,
+      skuInventory,
+      skuRollup: {
+        stockouts: stockouts.length,
+        protected: skuInventory.length - stockouts.length - noData,
+        noData,
+        earliestStockoutDay,
+      },
     };
   });
   const stockouts = facilities

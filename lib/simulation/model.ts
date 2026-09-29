@@ -1,3 +1,4 @@
+import type { FacilityInventory } from '../sku-inventory.ts';
 import type { Facility, Route } from '../data/network.ts';
 import type { InventoryImpact, InventorySummary } from './inventory.ts';
 
@@ -36,6 +37,13 @@ export interface FacilityImpact {
 }
 export interface ImpactedFacility extends Facility {
   inventory?: InventoryImpact;
+  skuInventory?: (FacilityInventory & { projection: InventoryImpact })[];
+  skuRollup?: {
+    stockouts: number;
+    protected: number;
+    noData: number;
+    earliestStockoutDay?: number;
+  };
   impact: FacilityImpact | null;
   mitigation?: {
     name: string;
@@ -50,6 +58,7 @@ export interface ImpactedRoute extends Route {
 }
 export interface SimulationResult {
   inventorySummary?: InventorySummary;
+  inventoryRecords?: FacilityInventory[];
   active: boolean;
   facilities: ImpactedFacility[];
   routes: ImpactedRoute[];

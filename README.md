@@ -1,6 +1,16 @@
-# TwinChain · v0.16
+# TwinChain · v0.17
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.17 SKU / Inventory Foundation
+
+Networks may now include optional `skus` (unique ID and name) and `inventoryRecords` linking a facility ID and SKU ID to optional current inventory and daily demand. Old networks and JSON backups need no migration. Source records persist through the existing local network storage and JSON backup allowlist; projections never persist. Deleting a facility removes its inventory records. Scenario fingerprints include populated SKU data, and reopen recomputes results.
+
+Import an optional **Inventory** or **SKUs** Excel worksheet (other worksheet names can be selected), or an optional third Inventory CSV alongside Facilities and Routes. Map SKU ID, SKU name and Facility ID; inventory and demand may be omitted. Aliases include Part Number, Product, Qty OH and Average Daily Sales. Repeated SKU IDs may occur at different facilities with a consistent name; duplicate facility+SKU pairs, conflicting names, invalid references and negative quantities block import. Missing inventory or positive demand gives a warning and No Data.
+
+At downstream exposed facilities, each SKU uses the existing facility-level supply availability: daily depletion = SKU daily demand × lost supply share; stockout day = on-hand / daily depletion. SKU records take precedence over aggregate inventory at that facility, without adding the two. Other facilities retain the exact legacy aggregate behavior. Rollups use stockout/protected/No Data counts and the earliest stockout day, never summed coverage or quantities across unlike SKUs. Existing service/risk formulas consume the rollup; lead time and logistics calculations are unchanged. Mitigation recalculates the same SKU projections, while intervention pricing retains existing facility demand/fallback assumptions.
+
+The compact **Inventory by SKU** table below the map shows eight records initially and follows facility selection in Build or Simulate mode. Catalog management and manual SKU editing are deferred. Supply availability and mitigation targets remain facility-level, not SKU-specific sourcing; no SKU routes, forecasting, replenishment, BOMs, pipeline inventory, optimization or ERP integration is included.
 
 ## v0.16 Import Mapping & Data Onboarding
 

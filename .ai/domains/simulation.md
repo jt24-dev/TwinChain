@@ -57,3 +57,7 @@ Inventory adjusts risk count and service impact, while topology-derived lead tim
 ## Usually Unrelated
 
 Avoid map projection, basemap assets, product navigation, Pricing copy, import UI, builder forms, and CSS unless the request explicitly changes how simulation results are presented. Mitigation-specific rules belong in the mitigation domain.
+
+## SKU analysis
+
+runFacilityShutdown accepts optional inventory records as its fifth argument. At downstream exposed facilities, SKU records override aggregate inventory analysis; each uses the same facility-level lost supply fraction. Rollup state is stockout if any SKU stocks out, otherwise No Data if any record lacks usable values, otherwise protected. The earliest within-horizon stockout informs existing service/risk formulas. No coverage or unit quantities are summed. Mitigation recalculates these projections from source records; unchanged legacy networks retain exact behavior.

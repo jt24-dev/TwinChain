@@ -12,6 +12,27 @@ const number = (n: number) =>
 export function InventoryDetails({ facility }: { facility: ImpactedFacility }) {
   const i = facility.inventory;
   if (!i) return null;
+  if (facility.skuRollup)
+    return (
+      <details open className="operations-details">
+        <summary>Inventory by SKU</summary>
+        <p>
+          {facility.skuRollup.stockouts} projected stockouts ·{' '}
+          {facility.skuRollup.protected} protected · {facility.skuRollup.noData}{' '}
+          No Data
+        </p>
+        <p>
+          Earliest SKU stockout:{' '}
+          {facility.skuRollup.earliestStockoutDay === undefined
+            ? 'None calculated'
+            : 'Day ' + number(facility.skuRollup.earliestStockoutDay)}
+        </p>
+        <p>
+          SKU records take precedence over aggregate inventory. See the SKU
+          table below the map.
+        </p>
+      </details>
+    );
   return (
     <details open className="operations-details inventory-details">
       <summary>Inventory Impact</summary>

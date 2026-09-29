@@ -1,7 +1,7 @@
 import type { Facility, Route } from '../data/network.ts';
 import type { ImportIssue, ImportTable } from './network-import.ts';
 
-export type ImportTableKind = 'facilities' | 'routes';
+export type ImportTableKind = 'facilities' | 'routes' | 'inventory';
 export type MappingConfidence = 'exact' | 'suggested' | 'unmapped';
 
 export interface ImportField {
@@ -211,8 +211,54 @@ export const routeImportFields: readonly ImportField[] = [
   },
 ] as const;
 
+export const inventoryImportFields: readonly ImportField[] = [
+  {
+    key: 'sku_id',
+    label: 'SKU ID',
+    required: true,
+    category: 'Structural',
+    aliases: ['sku', 'part number', 'item id', 'material', 'product id'],
+  },
+  {
+    key: 'sku_name',
+    label: 'SKU name',
+    required: true,
+    category: 'Structural',
+    aliases: ['item', 'product', 'product name', 'item name', 'material name'],
+  },
+  {
+    key: 'facility_id',
+    label: 'Facility ID',
+    required: true,
+    category: 'Structural',
+    aliases: ['facility', 'site id', 'location id'],
+  },
+  {
+    key: 'current_inventory',
+    label: 'On-hand inventory',
+    required: false,
+    category: 'Operational',
+    aliases: ['qty oh', 'on hand', 'stock', 'inventory', 'qty on hand'],
+  },
+  {
+    key: 'daily_demand',
+    label: 'Daily demand',
+    required: false,
+    category: 'Operational',
+    aliases: [
+      'avg daily usage',
+      'average daily sales',
+      'daily usage',
+      'demand',
+    ],
+  },
+];
 export const importFields = (kind: ImportTableKind) =>
-  kind === 'facilities' ? facilityImportFields : routeImportFields;
+  kind === 'facilities'
+    ? facilityImportFields
+    : kind === 'routes'
+      ? routeImportFields
+      : inventoryImportFields;
 
 export function normalizeImportToken(value: unknown): string {
   return typeof value === 'string' || typeof value === 'number'
@@ -298,7 +344,12 @@ export function applyColumnMapping(
     if (mapping[field.key] === undefined)
       issues.push({
         severity: 'error',
-        table: kind === 'facilities' ? 'Facilities' : 'Routes',
+        table:
+          kind === 'facilities'
+            ? 'Facilities'
+            : kind === 'routes'
+              ? 'Routes'
+              : 'Inventory',
         field: field.key,
         message:
           field.key === 'latitude'
@@ -315,7 +366,12 @@ export function applyColumnMapping(
     if (previous)
       issues.push({
         severity: 'error',
-        table: kind === 'facilities' ? 'Facilities' : 'Routes',
+        table:
+          kind === 'facilities'
+            ? 'Facilities'
+            : kind === 'routes'
+              ? 'Routes'
+              : 'Inventory',
         field: field.key,
         message: `Uploaded column "${header.columns.find((column) => column.index === source)?.label ?? source + 1}" is already mapped to ${previous}. Choose a different column.`,
       });

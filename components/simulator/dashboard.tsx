@@ -10,6 +10,7 @@ import {
 import { ArrowRight, Check, Radio, TriangleAlert } from 'lucide-react';
 import { getNetworkState, shanghaiClosure } from '@/lib/data/scenario';
 import { KpiCards } from './kpi-cards';
+import { SkuInventoryView } from './sku-inventory';
 import { NetworkMap } from './network-map';
 import { ScenarioControls } from './scenario-controls';
 import { useScenarioTools } from '@/lib/use-scenario-tools';
@@ -176,7 +177,13 @@ export function Dashboard() {
       shutdown.networkId === network.id &&
       network.kind === 'custom' &&
       mode === 'simulate'
-        ? runFacilityShutdown(network.facilities, network.routes, shutdown)
+        ? runFacilityShutdown(
+            network.facilities,
+            network.routes,
+            shutdown,
+            'custom',
+            network.inventoryRecords,
+          )
         : customBase,
     [network, shutdown, mode, customBase],
   );
@@ -492,6 +499,13 @@ export function Dashboard() {
                     : undefined
                 }
               />
+              <SkuInventoryView
+                network={network}
+                result={customSimulation}
+                selectedId={
+                  mode === 'build' ? builder.facility?.id : customSelected
+                }
+              />
               {demoSimulation && (
                 <section
                   className={`impact-strip ${active ? 'active' : ''}`}
@@ -624,7 +638,7 @@ export function Dashboard() {
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.16 · Client-side demo ·
+              <span className="footer-dot" /> v0.17 · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>

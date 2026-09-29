@@ -61,3 +61,7 @@ Mapping creates canonical in-memory tables without changing uploaded data, then 
 ## Usually Unrelated
 
 Avoid map geometry, visual builder interaction, simulation formulas, mitigation coefficients, product pages, and CSS unless the task changes preview presentation. Do not create a separate imported-network runtime path.
+
+## v0.17 inventory input
+
+Optional third CSV or selected Excel Inventory/SKUs worksheet uses the same column mapper. lib/import/sku-import.ts validates combined SKU identity + facility inventory rows, consistent names, references, nonnegative values and unique facility/SKU pairs. Blank inventory/demand remains absent and warns. Preview includes SKU/record/facility counts; creation stays atomic. Up to 20,000 inventory rows per import.

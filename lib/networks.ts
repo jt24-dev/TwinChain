@@ -1,3 +1,4 @@
+import { validateSkuData, copySkuData, type SkuData } from './sku-inventory.ts';
 import {
   facilities,
   routes,
@@ -13,7 +14,7 @@ import {
   type RouteOperations,
 } from './operations.ts';
 
-export interface SupplyNetwork {
+export interface SupplyNetwork extends SkuData {
   id: string;
   name: string;
   kind: 'demo' | 'custom';
@@ -103,6 +104,7 @@ export function validateNetwork(network: SupplyNetwork): void {
     )
       throw new Error('Invalid facility coordinates.');
   }
+  validateSkuData(network, ids);
   const routeIds = new Set<string>(),
     connections = new Set<string>();
   for (const r of network.routes) {
@@ -185,6 +187,10 @@ export function editNetwork(
               f.id === edit.id ? { ...f, ...edit.changes } : f,
             )
           : network.facilities.filter((f) => f.id !== edit.id);
+      if (edit.type === 'delete-facility' && network.inventoryRecords)
+        next.inventoryRecords = network.inventoryRecords.filter(
+          (r) => r.facilityId !== edit.id,
+        );
       if (edit.type === 'delete-facility')
         next.routes = network.routes.filter(
           (r) => r.from !== edit.id && r.to !== edit.id,
@@ -241,6 +247,7 @@ export function parseNetworks(raw: string): SavedNetworks {
       id: network.id,
       name: network.name,
       kind: 'custom' as const,
+      ...copySkuData(network),
       facilities: network.facilities.map((f) => ({
         ...operationValues(f, 'facility'),
         id: f.id,

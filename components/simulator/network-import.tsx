@@ -24,6 +24,7 @@ import {
   type RawImportSource,
 } from '@/lib/import/read-files';
 import {
+  suggestColumnMapping,
   importFields,
   isStandardMapping,
   mappingSummary,
@@ -53,6 +54,9 @@ export function NetworkImport({
   const [source, setSource] = useState<RawImportSource | null>(null);
   const [facilitySheet, setFacilitySheet] = useState('');
   const [routeSheet, setRouteSheet] = useState('');
+  const [inventorySheet, setInventorySheet] = useState('');
+  const [inventoryMapping, setInventoryMapping] =
+    useState<ColumnMapping>(blankMapping);
   const [facilityMapping, setFacilityMapping] =
     useState<ColumnMapping>(blankMapping);
   const [routeMapping, setRouteMapping] = useState<ColumnMapping>(blankMapping);
@@ -74,6 +78,8 @@ export function NetworkImport({
     setSource(null);
     setFacilitySheet('');
     setRouteSheet('');
+    setInventorySheet('');
+    setInventoryMapping(blankMapping());
     setFacilityMapping(blankMapping());
     setRouteMapping(blankMapping());
     setPreview(null);
@@ -122,6 +128,8 @@ export function NetworkImport({
     facilities: string,
     routes: string,
     mappings: { facilities: ColumnMapping; routes: ColumnMapping },
+    selectedInventorySheet = inventorySheet,
+    selectedInventoryMapping = inventoryMapping,
   ) {
     setPreview(
       previewMappedImport(
@@ -130,6 +138,8 @@ export function NetworkImport({
         routes,
         mappings.facilities,
         mappings.routes,
+        selectedInventorySheet,
+        selectedInventoryMapping,
       ),
     );
     setStep('preview');
@@ -164,16 +174,27 @@ export function NetworkImport({
       if (!facilities) facilities = bestSheet(raw, 'facilities', routes);
       setFacilitySheet(facilities);
       setRouteSheet(routes);
-      if (format === 'excel' && !raw.standardSheets) {
+      const inventory = raw.sheets.find((s) =>
+        ['inventory', 'skus'].includes(s.name.trim().toLowerCase()),
+      );
+      setInventorySheet(inventory?.name ?? '');
+      setInventoryMapping(
+        suggestColumnMapping(inventory?.data ?? [], 'inventory'),
+      );
+      if (
+        format === 'excel' &&
+        (!raw.standardSheets || raw.sheets.length > 2)
+      ) {
         setStep('sheets');
         return;
       }
       const mappings = setMappings(raw, facilities, routes);
       if (
+        !inventory &&
         isStandardMapping(mappings.facilities, 'facilities') &&
         isStandardMapping(mappings.routes, 'routes')
       )
-        createPreview(raw, facilities, routes, mappings);
+        createPreview(raw, facilities, routes, mappings, '', blankMapping());
       else setStep('mapping');
     } catch (cause) {
       setError(
@@ -197,6 +218,12 @@ export function NetworkImport({
     }
     setError('');
     setMappings(source, facilitySheet, routeSheet);
+    setInventoryMapping(
+      suggestColumnMapping(
+        source.sheets.find((s) => s.name === inventorySheet)?.data ?? [],
+        'inventory',
+      ),
+    );
     setStep('mapping');
   }
 
@@ -218,6 +245,17 @@ export function NetworkImport({
     ];
     if (missing.length) {
       setError(`Map the required fields: ${missing.join(', ')}.`);
+      return;
+    }
+    if (
+      inventorySheet &&
+      importFields('inventory').some(
+        (f) => f.required && inventoryMapping.fields[f.key] === undefined,
+      )
+    ) {
+      setError(
+        'Map the required inventory fields: SKU ID, SKU name, and Facility ID.',
+      );
       return;
     }
     setError('');
@@ -254,7 +292,13 @@ export function NetworkImport({
     const columns = tableHeader(table).columns;
     return (
       <section className="mapping-table" aria-label={`${kind} column mapping`}>
-        <h3>{kind === 'facilities' ? 'Facility columns' : 'Route columns'}</h3>
+        <h3>
+          {kind === 'facilities'
+            ? 'Facility columns'
+            : kind === 'routes'
+              ? 'Route columns'
+              : 'SKU inventory columns'}
+        </h3>
         <p>TwinChain field → uploaded column</p>
         {importFields(kind).map((field) => {
           const selected = mapping.fields[field.key];
@@ -314,6 +358,9 @@ export function NetworkImport({
 
   const facilitySummary = mappingSummary('facilities', facilityMapping.fields);
   const routeSummary = mappingSummary('routes', routeMapping.fields);
+  const inventorySummary = inventorySheet
+    ? mappingSummary('inventory', inventoryMapping.fields)
+    : { mapped: 0, unmappedOptional: 0 };
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -386,7 +433,7 @@ export function NetworkImport({
                 ? ['Network JSON backup']
                 : format === 'excel'
                   ? ['Excel workbook file']
-                  : ['Facilities CSV', 'Routes CSV']
+                  : ['Facilities CSV', 'Routes CSV', 'Inventory CSV (optional)']
               ).map((label, index) => (
                 <label className="builder-field" key={label}>
                   {label}
@@ -455,8 +502,8 @@ export function NetworkImport({
           <section className="sheet-selection">
             <h3>Select workbook sheets</h3>
             <p>
-              TwinChain found {source.sheets.length} sheets. Confirm which two
-              contain the network tables.
+              TwinChain found {source.sheets.length} sheets. Confirm the network
+              tables and optional SKU inventory sheet.
             </p>
             <label className="builder-field">
               Facilities worksheet
@@ -480,6 +527,22 @@ export function NetworkImport({
                 {source.sheets.map((sheet) => (
                   <option key={sheet.name}>{sheet.name}</option>
                 ))}
+              </select>
+            </label>
+            <label className="builder-field">
+              Inventory worksheet (optional)
+              <select
+                value={inventorySheet}
+                onChange={(event) => setInventorySheet(event.target.value)}
+              >
+                <option value="">Skip SKU inventory</option>
+                {source.sheets
+                  .filter(
+                    (s) => s.name !== facilitySheet && s.name !== routeSheet,
+                  )
+                  .map((s) => (
+                    <option key={s.name}>{s.name}</option>
+                  ))}
               </select>
             </label>
             <div className="import-navigation">
@@ -507,6 +570,13 @@ export function NetworkImport({
                 setFacilityMapping,
                 facilitySheet,
               )}
+              {inventorySheet &&
+                mappingPanel(
+                  'inventory',
+                  inventoryMapping,
+                  setInventoryMapping,
+                  inventorySheet,
+                )}
               {mappingPanel(
                 'routes',
                 routeMapping,
@@ -519,7 +589,8 @@ export function NetworkImport({
                 variant="ghost"
                 onClick={() =>
                   setStep(
-                    format === 'excel' && !source.standardSheets
+                    format === 'excel' &&
+                      (!source.standardSheets || source.sheets.length > 2)
                       ? 'sheets'
                       : 'upload',
                   )
@@ -573,6 +644,17 @@ export function NetworkImport({
             aria-live="polite"
           >
             <h3>{resolvedName}</h3>
+            {preview.inventoryRecords && (
+              <p>
+                {preview.skus?.length ?? 0} SKUs ·{' '}
+                {preview.inventoryRecords.length} facility-SKU records ·{' '}
+                {
+                  new Set(preview.inventoryRecords.map((r) => r.facilityId))
+                    .size
+                }{' '}
+                facilities with SKU inventory
+              </p>
+            )}
             <p>
               {operationalCompleteness(preview).facilities} facilities and{' '}
               {operationalCompleteness(preview).routes} routes include
@@ -585,8 +667,13 @@ export function NetworkImport({
               </strong>
             </p>
             <p>
-              {facilitySummary.mapped + routeSummary.mapped} fields mapped ·{' '}
-              {facilitySummary.unmappedOptional + routeSummary.unmappedOptional}{' '}
+              {facilitySummary.mapped +
+                routeSummary.mapped +
+                inventorySummary.mapped}{' '}
+              fields mapped ·{' '}
+              {facilitySummary.unmappedOptional +
+                routeSummary.unmappedOptional +
+                inventorySummary.unmappedOptional}{' '}
               optional fields unmapped
             </p>
             <p className={errors.length ? 'builder-error' : 'import-valid'}>

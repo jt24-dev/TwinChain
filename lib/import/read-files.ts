@@ -27,7 +27,11 @@ export interface RawImportSource {
 }
 
 function checkFiles(format: 'excel' | 'csv', files: File[]) {
-  if (files.length !== (format === 'excel' ? 1 : 2))
+  if (
+    format === 'excel'
+      ? files.length !== 1
+      : files.length < 2 || files.length > 3
+  )
     throw new Error('Select the required file or files first.');
   for (const file of files) {
     if (file.size > IMPORT_LIMITS.bytes)
@@ -49,17 +53,26 @@ export async function readImportSource(
 ): Promise<RawImportSource> {
   checkFiles(format, files);
   if (format === 'csv') {
-    const [facilities, routes] = await Promise.all(
+    const [facilities, routes, inventory] = await Promise.all(
       files.map((file) => file.text()),
     );
     const facilityTable = parseCsv(facilities, 'Facilities');
     const routeTable = parseCsv(routes, 'Routes');
+    const inventoryTable =
+      inventory === undefined ? undefined : parseCsv(inventory, 'Inventory');
     return {
       sheets: [
         { name: 'Facilities', data: facilityTable.rows },
         { name: 'Routes', data: routeTable.rows },
+        ...(inventoryTable
+          ? [{ name: 'Inventory', data: inventoryTable.rows }]
+          : []),
       ],
-      issues: [...facilityTable.issues, ...routeTable.issues],
+      issues: [
+        ...facilityTable.issues,
+        ...routeTable.issues,
+        ...(inventoryTable?.issues ?? []),
+      ],
       facilitySheet: 'Facilities',
       routeSheet: 'Routes',
       standardSheets: true,
@@ -97,6 +110,8 @@ export function previewMappedImport(
   routeSheet: string,
   facilityMapping: ColumnMapping,
   routeMapping: ColumnMapping,
+  inventorySheet = '',
+  inventoryMapping?: ColumnMapping,
 ): ImportPreview {
   const facilities = source.sheets.find(
     (sheet) => sheet.name === facilitySheet,
@@ -134,12 +149,32 @@ export function previewMappedImport(
     'routes',
     routeMapping.fields,
   );
-  return previewImport(mappedFacilities.table, mappedRoutes.table, [
-    ...source.issues,
-    ...selectionIssues,
-    ...mappedFacilities.issues,
-    ...mappedRoutes.issues,
-  ]);
+  const inventory = inventorySheet
+    ? applyColumnMapping(
+        source.sheets.find((s) => s.name === inventorySheet)?.data ?? [],
+        'inventory',
+        inventoryMapping?.fields ?? {},
+      )
+    : undefined;
+  if (inventorySheet && [facilitySheet, routeSheet].includes(inventorySheet))
+    selectionIssues.push({
+      severity: 'error',
+      table: 'Inventory',
+      field: 'worksheet',
+      message: 'Choose a separate inventory worksheet.',
+    });
+  return previewImport(
+    mappedFacilities.table,
+    mappedRoutes.table,
+    [
+      ...source.issues,
+      ...selectionIssues,
+      ...mappedFacilities.issues,
+      ...mappedRoutes.issues,
+      ...(inventory?.issues ?? []),
+    ],
+    inventory?.table,
+  );
 }
 
 export async function readImportFiles(

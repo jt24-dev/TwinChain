@@ -81,6 +81,10 @@ export function scenarioNetworkFingerprint(network: SupplyNetwork) {
     kind: network.kind,
     facilities: network.facilities,
     routes: network.routes,
+    ...(network.skus?.length ? { skus: network.skus } : {}),
+    ...(network.inventoryRecords?.length
+      ? { inventoryRecords: network.inventoryRecords }
+      : {}),
   });
   let hash = 2166136261;
   for (let index = 0; index < source.length; index++) {
@@ -324,8 +328,7 @@ export function createSavedScenario({
         result.inventorySummary?.protectedFacilityIds.length ?? 0,
       ...(result.inventorySummary
         ? {
-            noDataFacilities:
-              result.inventorySummary.noDataFacilityIds.length,
+            noDataFacilities: result.inventorySummary.noDataFacilityIds.length,
           }
         : {}),
       ...(result.inventorySummary?.earliestStockoutDay === undefined
@@ -401,6 +404,8 @@ export function reproduceSavedScenario(
       network.facilities,
       network.routes,
       scenario.disruption,
+      'custom',
+      network.inventoryRecords,
     );
     return {
       ok: true,
