@@ -20,6 +20,14 @@ import {
   editNetwork,
 } from '../lib/networks.ts';
 import { runFacilityShutdown } from '../lib/simulation/facility-shutdown.ts';
+import {
+  applyColumnMapping,
+  facilityTypeAlias,
+  isStandardMapping,
+  normalizeImportToken,
+  suggestColumnMapping,
+  transportModeAlias,
+} from '../lib/import/import-mapping.ts';
 
 const fh = [
   'id',
@@ -91,8 +99,19 @@ test('missing headers and duplicate logical headers are errors', () => {
   assert.ok(errors(p).some((i) => i.message.includes('Duplicate column')));
 });
 test('unsupported facility types including prototype property names are rejected', () => {
-  for (const value of ['Warehouse', 'constructor', '', false])
+  for (const value of ['constructor', '', false])
     assert.ok(errors(withFacility(2, value)).some((i) => i.field === 'type'));
+});
+test('approved facility and transportation value aliases normalize conservatively', () => {
+  assert.equal(facilityTypeAlias(' Warehouse '), 'Distribution center');
+  assert.equal(facilityTypeAlias('plant'), 'Factory');
+  assert.equal(facilityTypeAlias('vendor'), 'Supplier');
+  assert.equal(facilityTypeAlias('fulfillment hub'), undefined);
+  assert.equal(transportModeAlias('ocean freight'), 'Ocean');
+  assert.equal(transportModeAlias('plane'), 'Air');
+  assert.equal(transportModeAlias('train'), 'Rail');
+  assert.equal(transportModeAlias('lorry'), 'Truck');
+  assert.equal(transportModeAlias('van'), undefined);
 });
 test('latitude requires a finite decimal in range, never empty, boolean or date', () => {
   for (const value of [
@@ -338,4 +357,99 @@ test('actual xlsx reads cached formula values without calculating and rejects un
       (i) => i.field === 'latitude',
     ),
   );
+});
+
+test('mapping normalization ignores capitalization, spacing, punctuation, underscores and hyphens', () => {
+  for (const value of [
+    'Current Inventory',
+    ' current_inventory ',
+    'CURRENT-INVENTORY',
+    'current.inventory',
+  ])
+    assert.equal(normalizeImportToken(value), 'currentinventory');
+});
+
+test('custom facility headers map structural and operational data into valid records', () => {
+  const source = [
+    [
+      'Facility ID',
+      'Warehouse',
+      'Category',
+      'Lat',
+      'Lng',
+      'Qty OH',
+      'Avg Daily Usage',
+    ],
+    ['a', 'Vendor One', 'Vendor', 10, 20, 140, 10],
+    ['b', 'Warehouse One', 'Warehouse', 11, 21, 70, 5],
+  ];
+  const mapping = suggestColumnMapping(source, 'facilities');
+  const mapped = applyColumnMapping(source, 'facilities', mapping.fields);
+  const routeSource = [
+    ['Lane ID', 'Origin ID', 'Destination ID', 'Shipping Mode'],
+    ['r1', 'a', 'b', 'trucking'],
+  ];
+  const routeMapping = suggestColumnMapping(routeSource, 'routes');
+  const mappedRoutes = applyColumnMapping(
+    routeSource,
+    'routes',
+    routeMapping.fields,
+  );
+  const p = previewImport(mapped.table, mappedRoutes.table, [
+    ...mapped.issues,
+    ...mappedRoutes.issues,
+  ]);
+  assert.equal(errors(p).length, 0);
+  assert.equal(p.facilities[0].currentInventory, 140);
+  assert.equal(p.facilities[0].dailyDemand, 10);
+  assert.equal(p.facilities[0].type, 'Supplier');
+  assert.equal(p.facilities[1].type, 'Distribution center');
+  assert.equal(p.routes[0].mode, 'Truck');
+});
+
+test('manual mapping override wins over automatic suggestions', () => {
+  const source = [
+    ['id', 'name', 'alternate name', 'type', 'latitude', 'longitude'],
+    ['a', 'Original', 'Chosen', 'Port', 1, 2],
+  ];
+  const mapping = suggestColumnMapping(source, 'facilities');
+  assert.equal(mapping.fields.name, 1);
+  const mapped = applyColumnMapping(source, 'facilities', {
+    ...mapping.fields,
+    name: 2,
+  });
+  const p = previewImport(mapped.table, [rh]);
+  assert.equal(errors(p).length, 0);
+  assert.equal(p.facilities[0].name, 'Chosen');
+});
+
+test('required unmapped fields and duplicate source mappings block mapped imports', () => {
+  const mapping = suggestColumnMapping(fs, 'facilities');
+  const missing = applyColumnMapping(fs, 'facilities', {
+    ...mapping.fields,
+    latitude: undefined,
+  });
+  assert.ok(missing.issues.some((issue) => issue.field === 'latitude'));
+  const duplicate = applyColumnMapping(fs, 'facilities', {
+    ...mapping.fields,
+    name: mapping.fields.id,
+  });
+  assert.ok(
+    duplicate.issues.some((issue) => issue.message.includes('already mapped')),
+  );
+});
+
+test('mapping does not mutate uploaded source data', () => {
+  const source = structuredClone(fs);
+  const before = structuredClone(source);
+  const mapping = suggestColumnMapping(source, 'facilities');
+  applyColumnMapping(source, 'facilities', mapping.fields);
+  assert.deepEqual(source, before);
+});
+
+test('standard templates remain exact fast-path mappings', () => {
+  const facilities = suggestColumnMapping(fs, 'facilities');
+  const routes = suggestColumnMapping(rs, 'routes');
+  assert.equal(isStandardMapping(facilities, 'facilities'), true);
+  assert.equal(isStandardMapping(routes, 'routes'), true);
 });

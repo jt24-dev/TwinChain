@@ -7,6 +7,7 @@ import {
   type SupplyNetwork,
 } from '../networks.ts';
 import type { Facility, Route } from '../data/network.ts';
+import { facilityTypeAlias, transportModeAlias } from './import-mapping.ts';
 
 export const IMPORT_LIMITS = {
   bytes: 10 * 1024 * 1024,
@@ -42,9 +43,6 @@ const headerAliases: Record<string, string> = {
   lng: 'longitude',
   from: 'source',
   to: 'destination',
-};
-const typeAliases: Record<string, Facility['type']> = {
-  dc: 'Distribution center',
 };
 
 export function parseCsv(
@@ -212,15 +210,13 @@ export function previewImport(
     if (id) ids.add(id);
     const type =
       facilityTypes.find((t) => key(t) === key(v.type)) ??
-      (Object.hasOwn(typeAliases, key(v.type))
-        ? typeAliases[key(v.type)]
-        : undefined);
+      facilityTypeAlias(v.type);
     if (!type)
       error(
         'Facilities',
         row,
         'type',
-        'Use Supplier, Factory, Port, Distribution Center (or DC), or Customer Market.',
+        'Use Supplier, Factory, Port, Distribution Center (including DC or Warehouse), or Customer Market.',
       );
     const coordinate = (field: 'latitude' | 'longitude', max: number) => {
       const raw = clean(v[field]);
@@ -292,7 +288,9 @@ export function previewImport(
         'destination',
         'Source and destination must be different facilities.',
       );
-    const mode = transportModes.find((m) => key(m) === key(v.mode));
+    const mode =
+      transportModes.find((m) => key(m) === key(v.mode)) ??
+      transportModeAlias(v.mode);
     if (!mode)
       error('Routes', row, 'mode', `Use ${transportModes.join(', ')}.`);
     const connection = JSON.stringify([from, to, mode]);

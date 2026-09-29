@@ -56,7 +56,7 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 ## Imports
 
-`components/simulator/network-import.tsx` owns the client-side dialog, file choice, preview, issue display, and final confirmation. `lib/import/read-files.ts` reads `.xlsx` through `read-excel-file/browser` or paired CSV text. `lib/import/network-import.ts` normalizes approved headers/types, validates row data and references, creates warnings for isolated/disconnected topology, and converts valid rows into the shared model. `createImportedNetwork` runs shared network validation before creation; `useNetworks.importNetwork` inserts it atomically. Templates are in `public/templates/`.
+`components/simulator/network-import.tsx` owns the guided client-side upload, sheet selection, column mapping, preview, issue display, and final confirmation. `lib/import/read-files.ts` reads `.xlsx` through `read-excel-file/browser` or paired CSV text. `lib/import/import-mapping.ts` owns deterministic field definitions, header normalization, aliases, suggestions, and mapping application. `lib/import/network-import.ts` validates normalized row data and references, creates warnings for isolated/disconnected topology, and converts valid rows into the shared model. `createImportedNetwork` runs shared network validation before creation; `useNetworks.importNetwork` inserts it atomically. Templates are in `public/templates/`.
 
 ## Builder and Rendering
 

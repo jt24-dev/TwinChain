@@ -6,8 +6,9 @@ Read Excel, paired CSV, or TwinChain JSON backup files entirely in the browser; 
 
 ## Key Files
 
-- `components/simulator/network-import.tsx` — import dialog, format/file selection, naming, validation trigger, preview, issues, breakdowns, and confirmation.
-- `lib/import/read-files.ts` — browser file limits/type checks, paired CSV reading, and lazy `.xlsx` reading.
+- `components/simulator/network-import.tsx` — guided upload, sheet selection, column mapping, naming, preview, issues, breakdowns, back navigation, and confirmation.
+- `lib/import/read-files.ts` — browser file limits/type checks, paired CSV reading, lazy `.xlsx` reading, and mapped-preview orchestration.
+- `lib/import/import-mapping.ts` — canonical import fields, centralized aliases, deterministic suggestions, source-column mapping, and mapping safety checks.
 - `lib/import/network-import.ts` — CSV parsing, worksheet selection, normalization, row validation, preview issues/warnings, and shared-model conversion.
 - `lib/operations.ts` — optional operational column definitions/parsing.
 - `lib/networks.ts` — final shared model validation and atomic saved-library insertion.
@@ -17,16 +18,16 @@ Read Excel, paired CSV, or TwinChain JSON backup files entirely in the browser; 
 
 ## Data Flow
 
-The dialog accepts one `.xlsx`, two `.csv` files (Facilities first, Routes second), or one TwinChain `.json` backup. Files are limited to 10 MB each. Excel uses case-insensitive worksheets named exactly Facilities and Routes; formulas contribute only saved calculated values. CSV parsing uses Papa Parse and reports malformed quoting/column alignment.
+The dialog accepts one `.xlsx`, two `.csv` files (Facilities first, Routes second), or one TwinChain `.json` backup. Files are limited to 10 MB each. Standard Excel worksheet names are preselected; nonstandard workbooks expose sheet selection. Standard headers proceed directly to preview, while other headers receive editable deterministic suggestions. Formulas contribute only saved calculated values. CSV parsing uses Papa Parse and reports malformed quoting/column alignment.
 
 Required facility columns are `id`, `name`, `type`, `latitude`, and `longitude`. Optional descriptive fields are `city`, `region`, and `country`. Required route columns are `id`, `source`, `destination`, and `mode`. Optional operational columns are documented in the templates:
 
 - Facilities: capacity, current inventory, daily demand, utilization, replenishment lead time, criticality.
 - Routes: transit time, cost per shipment, route capacity, shipment frequency, reliability.
 
-Headers are trimmed, case-normalized, and normalize spaces/underscores/hyphens. Approved header aliases are `lat`, `lon`/`lng`, and `from`/`to`; facility type alias `DC` maps to Distribution center. IDs remain case-sensitive references.
+Header suggestions normalize case and remove whitespace, underscores, hyphens, and punctuation. Centralized conservative aliases cover common facility, coordinate, inventory/demand, endpoint, mode, and operational labels. Approved facility values include warehouse → Distribution center, plant → Factory, and vendor → Supplier. Approved transport values include sea/ocean freight/ship → Ocean, air freight/plane → Air, railroad/train → Rail, and trucking/lorry → Truck. Unknown values remain validation errors. IDs remain case-sensitive references.
 
-`previewImport` returns valid row objects plus row-level issues. Blocking errors include missing/duplicate headers, required values, duplicate IDs/connections, invalid types/modes/coordinates/operational values, missing endpoint references, self-routes, and row/size limits. Isolated facilities and disconnected components are warnings; import remains allowed. Preview shows detected counts, valid type/mode breakdowns, operational completeness, and at most the first 100 issues.
+Mapping creates canonical in-memory tables without changing uploaded data, then `previewImport` supplies the existing row validation. Blocking errors include missing/duplicate mappings or headers, required values, duplicate IDs/connections, invalid types/modes/coordinates/operational values, missing endpoint references, self-routes, and row/size limits. Isolated facilities and disconnected components are warnings; import remains allowed. Preview shows mapped/unmapped counts, detected counts, valid type/mode breakdowns, operational completeness, and at most the first 100 issues. Back navigation changes mappings without re-upload.
 
 `createImportedNetwork` refuses previews with errors, creates `kind: "custom"`, and invokes `validateNetwork`. `addCustomNetwork` validates again before returning a new saved-library state. Until final confirmation succeeds, the current network is unchanged. JSON restore goes through the persistence allowlist and receives a new ID.
 

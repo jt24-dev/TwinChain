@@ -2047,8 +2047,8 @@ footer {
   margin: 10px 0;
 }
 .network-import-dialog {
-  width: min(720px, calc(100vw - 32px));
-  max-width: 720px;
+  width: min(920px, calc(100vw - 32px));
+  max-width: 920px;
   max-height: 88vh;
   overflow-y: auto;
   background: #14212c;
@@ -2057,6 +2057,111 @@ footer {
   padding: 24px;
   font-size: 14px;
   line-height: 1.5;
+}
+.import-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+}
+.import-steps li {
+  border-top: 2px solid #334653;
+  color: #7f96a5;
+  font-size: 11px;
+  padding-top: 6px;
+}
+.import-steps li.active,
+.import-steps li.complete {
+  border-color: #73e0cf;
+  color: #ccebe6;
+}
+.sheet-selection,
+.mapping-intro {
+  display: grid;
+  gap: 10px;
+}
+.sheet-selection h3,
+.mapping-intro h3,
+.mapping-table h3 {
+  font-size: 17px;
+  margin: 0;
+}
+.mapping-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.mapping-table {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  background: #101b24;
+  border: 1px solid #344956;
+  border-radius: 8px;
+}
+.mapping-table > p {
+  font-size: 12px;
+  margin: 0 0 4px;
+}
+.mapping-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.9fr) minmax(150px, 1.1fr);
+  gap: 4px 10px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid #273945;
+}
+.mapping-row > span {
+  color: #dce7ec;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mapping-row small {
+  display: block;
+  color: #8299a8;
+  font-size: 10px;
+  font-weight: 400;
+}
+.mapping-row select,
+.sheet-selection select {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #415563;
+  border-radius: 5px;
+  background: #162630;
+  color: #e0ebef;
+  padding: 7px 8px;
+}
+.mapping-confidence {
+  grid-column: 2;
+  color: #91a7b4;
+  font-size: 10px;
+  font-style: normal;
+}
+.mapping-confidence.exact {
+  color: #8ed8ca;
+}
+.mapping-confidence.suggested {
+  color: #e5c88b;
+}
+.mapping-confidence.unmapped {
+  color: #a5aeb5;
+}
+.import-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+@media (max-width: 760px) {
+  .mapping-grid {
+    grid-template-columns: 1fr;
+  }
+  .import-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .network-import-dialog h2 {
   padding-right: 24px;

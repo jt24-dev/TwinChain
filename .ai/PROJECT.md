@@ -15,7 +15,7 @@ The product includes:
 - A Home, Pricing, About/Methodology, and workspace shell with shared navigation.
 - Distinct Try Demo, Open App, Build, and Import flows.
 - A visual Custom Network builder for facilities, coordinates, directed routes, transportation modes, and optional operational data.
-- Client-side `.xlsx`, paired CSV, and JSON backup import/restore, with preview and validation before atomic creation.
+- Client-side `.xlsx`, paired CSV, and JSON backup import/restore, with deterministic sheet/column mapping, preview, and validation before atomic creation. Standard templates retain a direct fast path.
 - JSON export, local browser persistence, saved-network continuation, and recovery of valid records from partially damaged storage.
 - A geographic world map with Natural Earth context, accurate latitude/longitude projection, route curves, dateline handling, pan, intentional wheel zoom, touch/keyboard controls, and network fitting.
 - Deterministic downstream disruption propagation, inventory depletion, projected stockouts, KPI impact, Demo mitigation, and targeted Custom Network mitigation.

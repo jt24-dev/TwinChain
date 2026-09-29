@@ -1,6 +1,10 @@
-# TwinChain · v0.15
+# TwinChain · v0.16
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
+
+## v0.16 Import Mapping & Data Onboarding
+
+TwinChain now supports guided column mapping for uploaded data that does not already match the standard template. Excel imports can select Facilities and Routes worksheets; Excel and paired CSV imports receive deterministic header suggestions, editable required/optional mappings, and a normalized validation preview before atomic creation. Standard templates still take the direct preview path.
 
 ## v0.15 Scenario Comparison
 
@@ -129,22 +133,22 @@ Values persist through the existing schema and shared Network model. Internal pr
 
 ## CSV / Excel Supply Chain Import
 
-Choose **Import Network**, upload an `.xlsx` workbook or a pair of CSV files, then **Validate and preview**. Review the network name, detected facility/route counts, type/mode breakdowns, errors, and warnings before selecting **Import Network**. Confirmation creates a new custom network in Build mode; the current network and Demo Network are never overwritten. Imported networks use the same model, editor, localStorage, map, and shutdown simulator as manually built networks.
+Choose **Import Network**, upload an `.xlsx` workbook or a pair of CSV files, map nonstandard columns when needed, then preview and validate. Review the network name, mapped/unmapped counts, detected facility/route counts, type/mode breakdowns, errors, and warnings before selecting **Import Network**. Confirmation creates a new custom network in Build mode; the current network and Demo Network are never overwritten. Imported networks use the same model, editor, localStorage, map, and shutdown simulator as manually built networks.
 
-Excel requires **Facilities** and **Routes** worksheets (case-insensitive). CSV requires separate comma-separated Facilities and Routes files, with headers in the first nonempty row. Download the two minimal CSV templates from the import dialog; they can also be pasted into the corresponding Excel worksheets.
+Excel preselects **Facilities** and **Routes** worksheets (case-insensitive) and lets users choose other sheets. CSV requires separate comma-separated Facilities and Routes files, with headers in the first nonempty row. Download the two minimal CSV templates from the import dialog; they can also be pasted into the corresponding Excel worksheets.
 
 | Table      | Required columns                              | Optional columns            |
 | ---------- | --------------------------------------------- | --------------------------- |
 | Facilities | `id`, `name`, `type`, `latitude`, `longitude` | `city`, `region`, `country` |
 | Routes     | `id`, `source`, `destination`, `mode`         | None                        |
 
-Facility types are Supplier, Factory, Port, Distribution Center, and Customer Market; `DC` is accepted. Modes are Ocean, Truck, Rail, Air, Road, and Feeder. Whitespace and capitalization are normalized for headers/types/modes. Explicit header aliases `lat`, `lon`/`lng`, `from`, and `to` are accepted. IDs remain case-sensitive; store Excel IDs as text to retain leading zeros. Unknown values are rejected rather than guessed.
+Facility types are Supplier, Factory, Port, Distribution Center, and Customer Market; approved aliases include `DC`, `warehouse`, `plant`, and `vendor`. Modes are Ocean, Truck, Rail, Air, Road, and Feeder, with conservative aliases such as `sea`, `plane`, `train`, and `lorry`. Header suggestions normalize capitalization, whitespace, punctuation, underscores, and hyphens. The mapping screen always allows an override. IDs remain case-sensitive; store Excel IDs as text to retain leading zeros. Unknown values are rejected rather than guessed.
 
 Errors identify the table, row where available, field, and correction. Missing required values, duplicate IDs, invalid coordinates/types/modes, broken references, self-routes, and duplicate directional connections block import. Isolated facilities and disconnected components produce warnings but may be imported. Failed imports create nothing. Replacing files clears the old preview; confirmation is required after validation.
 
 Parsing stays in the browser: Papa Parse handles CSV quoting/newlines, and a lazily loaded `read-excel-file` handles `.xlsx`. Formula cells use their saved calculated values; formulas, macros, and external content are not executed. Required formula cells without usable saved values fail validation; optional unresolved cells remain unset. No files are uploaded or retained in network storage.
 
-Limits: 10 MB per file, 2,000 facilities, and 10,000 routes. Validation is tested with 600 facilities and 1,794 routes; dense-map performance is not an enterprise-scale guarantee. Coordinates are required, with no geocoding, ERP/API integration, SKU import, or custom mitigation. `.xls`, automatic column mapping, and a pre-confirmation map preview are deferred; the statistical preview covers this version.
+Limits: 10 MB per file, 2,000 facilities, and 10,000 routes. Validation is tested with 600 facilities and 1,794 routes; dense-map performance is not an enterprise-scale guarantee. Coordinates are required, with no geocoding, ERP/API integration, AI-assisted mapping, SKU import, saved mapping profiles, transformation formulas, `.xls`, or spreadsheet editor. The statistical preview covers this version.
 
 ## Visual network builder
 

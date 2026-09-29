@@ -624,7 +624,7 @@ export function Dashboard() {
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.15 · Client-side demo ·
+              <span className="footer-dot" /> v0.16 · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>
