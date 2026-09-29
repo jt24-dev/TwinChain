@@ -1,8 +1,12 @@
-# TwinChain · v0.13B
+# TwinChain · v0.15
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
 
-## v0.13B Scenario Save & History
+## v0.15 Scenario Comparison
+
+Select two to four saved scenarios in Scenario History and compare their disruption context, mitigation, service, lead time, logistics cost, facilities at risk, and stockout outcomes side by side. Comparisons require the same network ID and fingerprint, stay session-only, and never change saved scenarios. A selected Do Nothing scenario is labeled as the baseline; otherwise the first selected scenario is the stated reference. Compact tradeoff cues identify metric-level highs and lows without assigning an overall winner. The table scrolls horizontally at tablet widths, and any compared scenario can be reopened through the existing deterministic reproduction path.
+
+## v0.14 Scenario Save & History
 
 After running a Demo or Custom Network disruption, optionally apply a response and save the current scenario with a custom name. Scenario History stores a compact local record containing the network reference and fingerprint, shutdown input, mitigation configuration, KPI snapshot, and risk/stockout summary. History survives refresh and is sorted newest first.
 

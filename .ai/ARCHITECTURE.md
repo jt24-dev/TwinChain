@@ -50,6 +50,8 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 `lib/scenarios.ts` defines compact saved scenario records, validation, network fingerprints, result summaries, and deterministic reproduction through the existing Demo or Custom simulation path. `lib/use-scenarios.ts` stores them separately under `twinchain-scenarios-v1`. Scenario records reference networks and preserve inputs; they do not duplicate networks or persist derived map state. `scenario-history.tsx` provides save, reopen, and delete controls below the stable simulator workspace.
 
+`lib/scenario-comparison.ts` derives a session-only two-to-four-scenario comparison from saved records. It enforces matching network IDs and fingerprints, identifies an optional Do Nothing baseline, preserves stockout/no-data states, and calculates per-metric standings without writing new persistence. `scenario-history.tsx` owns temporary checkbox selection and renders the responsive comparison table; its Reopen actions reuse Dashboard's existing scenario reproduction callback.
+
 `lib/networks.ts` validates and allowlists persisted fields. `lib/network-backup.ts` uses the same strict parser to export one Custom Network and restore it under a new ID. Persisted network data includes network identity, facility/route structure, coordinates, modes, and optional operational fields. Simulation result state, camera state, selection, and display-only fields remain excluded. Scenario history is intentionally separate from the existing single-network JSON backup format.
 
 ## Imports
@@ -66,7 +68,7 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 ## Testing
 
-Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains approximately 148 tests. Major groups include:
+Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains approximately 166 tests. Major groups include:
 
 - `propagation.test.mjs`, `facility-shutdown.test.mjs`, `inventory.test.mjs`
 - `mitigation.test.mjs`, `custom-mitigation.test.mjs`, `scenario.test.mjs`
@@ -74,6 +76,7 @@ Tests use Node's built-in test runner with TypeScript stripping. They live in `t
 - `network-import.test.mjs`
 - `geospatial.test.mjs`, `map-camera.test.mjs`, `ontario-location.test.mjs`
 - `product-entry.test.mjs`
+- `scenario-comparison.test.mjs` — selection bounds, compatibility, tradeoffs, stockout states, immutability, and reopen compatibility
 
 Run all tests with `npm test`. Prefer the directly relevant test file during iteration.
 

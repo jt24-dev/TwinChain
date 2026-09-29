@@ -22,6 +22,7 @@ export interface ScenarioResultSnapshot {
   affectedRoutes: number;
   projectedStockouts: number;
   protectedFacilities: number;
+  noDataFacilities?: number;
   earliestStockoutDay?: number;
 }
 
@@ -168,6 +169,8 @@ function parseScenario(value: unknown): SavedScenario {
   count(snapshot.affectedRoutes, 'Affected route count');
   count(snapshot.projectedStockouts, 'Projected stockout count');
   count(snapshot.protectedFacilities, 'Protected facility count');
+  if (snapshot.noDataFacilities !== undefined)
+    count(snapshot.noDataFacilities, 'No-data facility count');
   if (
     snapshot.earliestStockoutDay !== undefined &&
     (!Number.isFinite(snapshot.earliestStockoutDay) ||
@@ -203,6 +206,9 @@ function parseScenario(value: unknown): SavedScenario {
       affectedRoutes: snapshot.affectedRoutes,
       projectedStockouts: snapshot.projectedStockouts,
       protectedFacilities: snapshot.protectedFacilities,
+      ...(snapshot.noDataFacilities === undefined
+        ? {}
+        : { noDataFacilities: snapshot.noDataFacilities }),
       ...(snapshot.earliestStockoutDay === undefined
         ? {}
         : { earliestStockoutDay: snapshot.earliestStockoutDay }),
@@ -316,6 +322,12 @@ export function createSavedScenario({
         result.inventorySummary?.stockoutFacilityIds.length ?? 0,
       protectedFacilities:
         result.inventorySummary?.protectedFacilityIds.length ?? 0,
+      ...(result.inventorySummary
+        ? {
+            noDataFacilities:
+              result.inventorySummary.noDataFacilityIds.length,
+          }
+        : {}),
       ...(result.inventorySummary?.earliestStockoutDay === undefined
         ? {}
         : {
