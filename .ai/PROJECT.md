@@ -4,9 +4,9 @@
 
 TwinChain is a client-side supply-chain resilience simulator. Users can open the built-in Demo Network, create a Custom Network visually, or import a network from Excel, paired CSV files, or a TwinChain JSON backup. A network contains geographically located facilities and directed transportation routes, with optional operational fields such as inventory, demand, capacity, transit time, cost, frequency, reliability, and criticality.
 
-In Simulate mode, a user shuts down a facility for a fixed duration. TwinChain traverses directed routes downstream, marks the shutdown source and exposed facilities, estimates deterministic delay, classifies route and facility states, projects inventory depletion and stockouts where data permits, and recalculates service level, lead time, logistics cost, and facilities at risk. Missing inventory or demand produces a clearly labeled topology estimate rather than invented stockout data.
+In Simulate mode, a user can shut down a facility, delay outbound supply, close a route, or reduce facility capacity for a fixed relative duration. TwinChain traverses directed routes downstream, estimates deterministic exposure and delay, classifies route and facility states, projects inventory depletion and stockouts where data permits, and recalculates service level, lead time, logistics cost, and facilities at risk. Missing inventory or demand produces a clearly labeled topology estimate rather than invented stockout data.
 
-The Demo Network has a predefined Shanghai Port Closure and Demo-specific response assumptions. Custom and imported networks use the generalized shutdown engine. Their current mitigation choices are Do Nothing, Reroute through an eligible existing inbound connection, and Expedite / Air Freight for one exposed downstream facility. Mitigation always compares against the original disruption result.
+The Demo Network has a predefined Shanghai Port Closure and Demo-specific response assumptions. Custom and imported networks use the generalized disruption input; shutdowns retain the prior engine. Their current mitigation choices are Do Nothing and compatible Reroute or Expedite / Air Freight responses. Mitigation always compares against the original disruption result.
 
 ## Current Product State
 
@@ -21,7 +21,7 @@ The product includes:
 - Deterministic downstream disruption propagation, inventory depletion, projected stockouts, KPI impact, Demo mitigation, and targeted Custom Network mitigation.
 - Separate local Scenario History for named Demo or Custom disruption/mitigation inputs, with deterministic reopen, network-change safety, and compact KPI/risk snapshots.
 - Session-only comparison of two to four saved scenarios from the same unchanged network, with factual KPI/stockout tradeoffs and direct reopen.
-- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is 197 tests.
+- Pure-function tests covering the model, imports, persistence, map geometry, simulation, inventory, mitigation, saved-scenario comparison, and product entry state. The current suite is 209 tests.
 
 ## Technical Philosophy
 
@@ -48,3 +48,7 @@ Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-
 ## v0.18 SKU sourcing
 
 Optional `skuSourcing` records connect a source, destination, and SKU over an existing directed route; route ID and share are optional. A destination+SKU group uses complete shares totaling 100% or equal shares when all are omitted. Sourced SKU projections use source/associated-route availability; unsourced records retain the v0.17 facility-level loss. Sourcing persists through the existing Custom Network/backup allowlist and participates in scenario fingerprints. Existing mitigation is facility-level and proportionally restores affected SKU flow; it does not choose SKU suppliers or routes.
+
+## v0.19 Expanded disruptions
+
+Custom Simulate mode accepts Facility Shutdown, Shipment Delay, Route Closure, and Capacity Reduction. `lib/simulation/disruption.ts` owns their serializable input, validation, and shared partial-flow propagation. Shutdown continues through its existing engine; the other types calculate fractional availability over a relative duration window. Inventory and SKU sourcing consume that availability. Saved scenarios persist and reopen the full input; old records default to shutdown. No shipment objects, calendar, optimization, or automatic rerouting are modeled.

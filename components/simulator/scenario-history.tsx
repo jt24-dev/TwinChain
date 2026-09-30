@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { SavedScenario } from '@/lib/scenarios';
+import { disruptionLabels } from '@/lib/simulation/disruption';
 import {
   buildScenarioComparison,
   MAX_SCENARIOS_TO_COMPARE,
@@ -222,7 +223,9 @@ export function ScenarioHistory({
                 <div className="scenario-history-primary">
                   <strong>{scenario.name}</strong>
                   <span>
-                    {scenario.networkName} · {scenario.disruptedFacilityName} ·{' '}
+                    {scenario.networkName} ·{' '}
+                    {disruptionLabels[scenario.disruption.type]} ·{' '}
+                    {scenario.disruptedFacilityName} ·{' '}
                     {scenario.disruption.durationDays} days
                   </span>
                 </div>
@@ -316,9 +319,7 @@ function ScenarioComparisonPanel({
         </small>
         {(best || worst) && (
           <span className="scenario-tradeoff">
-            {best
-              ? tradeoffLabels[metric].best
-              : tradeoffLabels[metric].worst}
+            {best ? tradeoffLabels[metric].best : tradeoffLabels[metric].worst}
           </span>
         )}
       </td>
@@ -334,12 +335,14 @@ function ScenarioComparisonPanel({
         <span>{reference.networkName}</span>
       </div>
       <p>
-        Differences use {comparison.baselineId ? 'the selected Do Nothing baseline' : 'the first selected scenario'} as the reference. No overall winner is assigned.
+        Differences use{' '}
+        {comparison.baselineId
+          ? 'the selected Do Nothing baseline'
+          : 'the first selected scenario'}{' '}
+        as the reference. No overall winner is assigned.
       </p>
       <div className="scenario-comparison-scroll">
-        <table
-          style={{ minWidth: 150 + comparison.scenarios.length * 210 }}
-        >
+        <table style={{ minWidth: 150 + comparison.scenarios.length * 210 }}>
           <caption>
             Saved scenario inputs and result snapshots from the same network.
           </caption>
@@ -368,13 +371,18 @@ function ScenarioComparisonPanel({
             <tr>
               <th scope="row">Disruption target</th>
               {comparison.scenarios.map((scenario) => (
-                <td key={scenario.id}>{scenario.disruptedFacilityName}</td>
+                <td key={scenario.id}>
+                  {disruptionLabels[scenario.disruption.type]} ·{' '}
+                  {scenario.disruptedFacilityName}
+                </td>
               ))}
             </tr>
             <tr>
               <th scope="row">Duration</th>
               {comparison.scenarios.map((scenario) => (
-                <td key={scenario.id}>{scenario.disruption.durationDays} days</td>
+                <td key={scenario.id}>
+                  {scenario.disruption.durationDays} days
+                </td>
               ))}
             </tr>
             <tr>

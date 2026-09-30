@@ -77,6 +77,12 @@ export function CustomMitigationControls({
         Choose an existing alternate connection or emergency supply. Each
         response starts from Do Nothing.
       </p>
+      {original.disruption?.type === 'capacity-reduction' && (
+        <p role="status">
+          Only Do Nothing is available for capacity reduction; a recovery
+          strategy is not modeled.
+        </p>
+      )}
       <label className="builder-field">
         Response
         <select
@@ -88,11 +94,22 @@ export function CustomMitigationControls({
             onApply({ id: 'do-nothing' });
           }}
         >
-          {Object.entries(customStrategyNames).map(([id, label]) => (
-            <option value={id} key={id}>
-              {label}
-            </option>
-          ))}
+          {Object.entries(customStrategyNames)
+            .filter(
+              ([id]) =>
+                id === 'do-nothing' ||
+                original.disruption?.type === undefined ||
+                original.disruption.type === 'facility-shutdown' ||
+                (original.disruption.type === 'route-closure' &&
+                  id === 'reroute') ||
+                (original.disruption.type === 'shipment-delay' &&
+                  id === 'air-freight'),
+            )
+            .map(([id, label]) => (
+              <option value={id} key={id}>
+                {label}
+              </option>
+            ))}
         </select>
       </label>
       {draft === 'reroute' && (

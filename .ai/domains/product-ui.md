@@ -33,6 +33,8 @@ Scenario comparison remains inside the same stable results area. Users select tw
 
 ## Important Invariants
 
+v0.19 Custom Simulate controls select a disruption type and show only its facility/route, duration, and optional remaining-capacity inputs. The Demo keeps its Shanghai shutdown control. Saved-scenario history/comparison displays disruption type; map and inventory inspectors explain fractional loss or delay without changing the workspace layout.
+
 - `/` opens Home for new and returning sessions.
 - Try Demo and Open App are intentionally different: direct guided Demo vs general workspace/network selection.
 - Saved network selection persists independently of product entry state.

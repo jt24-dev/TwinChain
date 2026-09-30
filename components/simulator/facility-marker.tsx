@@ -62,6 +62,11 @@ export function FacilityMarker({
         data-facility-id={f.id}
         data-severity={f.impact?.severity ?? 'normal'}
         data-inventory={f.inventory?.state}
+        data-disruption-target={
+          f.impact?.hops === 0 && f.status !== 'disrupted'
+            ? 'partial'
+            : undefined
+        }
       >
         <Icon size={14} />
         {f.inventory?.state === 'stockout' && (
@@ -85,6 +90,14 @@ export function FacilityMarker({
         >
           {f.city || f.name}
           {f.status === 'disrupted' && <b> CLOSED</b>}
+          {f.impact?.hops === 0 && f.status !== 'disrupted' && (
+            <b>
+              {' '}
+              {f.impact.disruptionType === 'shipment-delay'
+                ? 'DELAYED'
+                : 'REDUCED'}
+            </b>
+          )}
           {f.inventory?.state === 'stockout' ? (
             <b className="inventory-stockout-badge"> !</b>
           ) : f.inventory?.state === 'protected' ? (

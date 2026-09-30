@@ -55,6 +55,8 @@ Current deferrals: automatic routing/optimization, downstream reallocation, Alte
 
 With v0.18 sourcing, existing Custom mitigation still chooses facilities and routes at facility level. Its recovered fraction applies proportionally to unavailable sourced SKU flow at the target; healthy SKUs remain at full supply. It does not allocate recovery to a particular SKU supplier or choose alternate SKU sources.
 
+v0.19 keeps shutdown mitigation unchanged. A route closure can use existing reroute logic when an eligible healthy inbound connection has spare capacity; a delay can use expedite. Capacity reduction permits Do Nothing only, since the existing response assumptions cannot safely represent its recovery. Invalid combinations are rejected in the pure mitigation function and omitted from the control selector.
+
 ## Relevant Tests
 
 - `tests/custom-mitigation.test.mjs` — eligibility, capacity, cycles, fallbacks, stockout/KPI effects, non-compounding, immutability, and reset.

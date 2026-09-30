@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { SupplyNetwork } from '@/lib/networks';
 import type { SimulationResult } from '@/lib/simulation/model';
+import { disruptionLabels } from '@/lib/simulation/disruption';
 export function SkuInventoryView({
   network,
   result,
@@ -133,12 +134,12 @@ export function SkuInventoryView({
                                 source.supplyShare ?? 1 / sources.length,
                               )}
                               {source.routeId
-                                ? ` · ${routes.get(source.routeId)?.mode}`
+                                ? ` · ${source.routeId} (${routes.get(source.routeId)?.mode})`
                                 : ''}
                               {projection?.disruptedSourceIds?.includes(
                                 source.sourceFacilityId,
                               )
-                                ? ' · unavailable'
+                                ? ` · ${result.disruption?.type === 'capacity-reduction' ? 'reduced' : result.disruption?.type === 'shipment-delay' ? 'delayed' : 'unavailable'}`
                                 : ''}
                             </li>
                           ))}
@@ -150,7 +151,7 @@ export function SkuInventoryView({
                   </td>
                   <td>
                     {projection
-                      ? `${percent(1 - projection.supplyAvailability)} lost · ${percent(projection.supplyAvailability)} remaining`
+                      ? `${result.disruption ? disruptionLabels[result.disruption.type] + ' · ' : ''}${percent(1 - projection.supplyAvailability)} ${result.disruption?.type === 'shipment-delay' ? 'delayed' : 'lost'} · ${percent(projection.supplyAvailability)} available${projection.replenishmentDay ? ` until Day ${projection.replenishmentDay}; 100% resumes` : ''}`
                       : '—'}
                   </td>
                   <td>{number(projection?.dailyDepletion)}</td>

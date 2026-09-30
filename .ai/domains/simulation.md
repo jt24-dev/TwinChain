@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-Turn a directed `SupplyNetwork` and facility-shutdown input into immutable, deterministic impact state: disrupted/at-risk facilities, blocked/affected routes, downstream hop distance, delay, inventory outcomes, and business KPIs. This domain supplies results to the UI but does not own map drawing or network editing.
+Turn a directed `SupplyNetwork` and typed disruption input into immutable, deterministic impact state: disrupted/at-risk facilities, blocked/affected routes, downstream hop distance, delay, inventory outcomes, and business KPIs. This domain supplies results to the UI but does not own map drawing or network editing.
 
 ## Key Files
 
@@ -63,3 +63,5 @@ Avoid map projection, basemap assets, product navigation, Pricing copy, import U
 runFacilityShutdown accepts optional inventory records as its fifth argument. At downstream exposed facilities, SKU records override aggregate inventory analysis; unsourced records use the facility-level lost supply fraction. Rollup state is stockout if any SKU stocks out, otherwise No Data if any record lacks usable values, otherwise protected. The earliest within-horizon stockout informs existing service/risk formulas. No coverage or unit quantities are summed. Mitigation recalculates these projections from source records; unchanged legacy networks retain exact behavior.
 
 v0.18 adds optional sourcing as the sixth shutdown argument. For each sourced destination+SKU, unavailable upstream facilities or associated affected/blocked routes remove only their allocated share. Missing shares split equally; unsourced SKUs keep the prior facility-level calculation. Existing mitigation restores a proportional fraction of missing sourced SKU flow at its target facility, without selecting a new SKU source. `InventoryImpact.disruptedSourceIds` supports concise result explanation.
+
+v0.19 adds `lib/simulation/disruption.ts` with a validated, serializable disruption union. Shutdown delegates to the prior engine. Delay sets a temporary outbound supply interruption with replenishment at the window end; route closure blocks only its selected route; capacity reduction passes through its remaining-capacity fraction. The shared partial-flow traversal calculates availability from directed inbound connections (capacity weighted only when all capacities are present), avoids cycle amplification by using shorter-hop edges, and sends the result through the existing inventory pass. No automatic rerouting or day-by-day shipment model is implied.

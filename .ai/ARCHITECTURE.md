@@ -28,7 +28,7 @@ The effective flow is:
 
 ```text
 SupplyNetwork
-→ facility shutdown input
+→ typed disruption input
 → directed downstream propagation
 → route/facility impact and delay
 → topology KPI calculation
@@ -40,7 +40,7 @@ SupplyNetwork
 
 `lib/simulation/propagate-disruption.ts` performs the directed breadth-first traversal and base impact/KPI calculations. It records hop distance, applies severity by proximity, prevents duplicate processing, and safely terminates on cycles.
 
-`lib/simulation/facility-shutdown.ts` validates generalized shutdown inputs, invokes propagation, calculates Custom Network baselines and portfolio-scaled KPIs, then calls the inventory layer. `lib/simulation/inventory.ts` derives inbound supply availability, depletion, stockout timing, remaining inventory, risk count, and inventory-adjusted service impact. It leaves facilities without usable inventory/demand as `no-data`.
+`lib/simulation/facility-shutdown.ts` retains generalized shutdown inputs and existing behavior. `lib/simulation/disruption.ts` validates typed inputs and calculates non-shutdown partial flow before the shared inventory pass. `lib/simulation/inventory.ts` derives inbound supply availability, depletion, stockout timing, remaining inventory, risk count, and inventory-adjusted service impact. It leaves facilities without usable inventory/demand as `no-data`.
 
 Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in `lib/simulation/mitigation.ts`. Generalized Custom mitigation is in `lib/simulation/custom-mitigation.ts`. `Dashboard` retains both the original Custom disruption and the selected mitigated result so switching strategies does not compound changes.
 
@@ -68,7 +68,7 @@ Demo orchestration begins in `lib/data/scenario.ts`; Demo response rules live in
 
 ## Testing
 
-Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains 197 tests. Major groups include:
+Tests use Node's built-in test runner with TypeScript stripping. They live in `tests/*.test.mjs`, with workbook fixtures in `tests/fixtures/`. The suite currently contains 209 tests. Major groups include:
 
 - `propagation.test.mjs`, `facility-shutdown.test.mjs`, `inventory.test.mjs`
 - `mitigation.test.mjs`, `custom-mitigation.test.mjs`, `scenario.test.mjs`
@@ -78,6 +78,7 @@ Tests use Node's built-in test runner with TypeScript stripping. They live in `t
 - `product-entry.test.mjs`
 - `scenario-comparison.test.mjs` — selection bounds, compatibility, tradeoffs, stockout states, immutability, and reopen compatibility
 - `sku-sourcing.test.mjs` — source allocation, fallback, import mapping, persistence, scenario safety, and builder cleanup
+- `disruptions.test.mjs` — typed inputs, partial flow, SKU-specific exposure, mitigation compatibility, and scenario reopen
 
 Run all tests with `npm test`. Prefer the directly relevant test file during iteration.
 
@@ -99,3 +100,7 @@ Optional network skus and inventoryRecords are validated/allowlisted by lib/sku-
 ## v0.18 SKU sourcing
 
 `lib/sku-inventory.ts` also validates optional source→destination→SKU relationships, share groups, and route references. `lib/import/sourcing-import.ts` parses the optional mapped table; the existing import dialog handles a workbook sheet or fourth CSV. `runFacilityShutdown` carries sourcing alongside inventory records, and `applyInventoryImpact` groups it by destination+SKU once per run. Sourced records use their own unavailable share; unsourced records keep facility-level availability. The same persistence/backup allowlist and scenario fingerprint include sourcing. Build mode cleans relationships when facilities or their last directed route are deleted.
+
+## v0.19 Disruption input
+
+`lib/simulation/disruption.ts` parses a serializable four-type union. It delegates shutdowns to the unchanged shutdown engine and handles delay, one-route closure, and fractional facility capacity with a shared directed partial-flow pass. The inventory layer uses calculated availability; delay results record replenishment at the end of the window. Scenario storage keeps the typed input and defaults legacy untyped inputs to shutdown. Map and result components consume the typed result without persisting derived state.

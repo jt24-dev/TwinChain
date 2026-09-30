@@ -1,16 +1,19 @@
 import { X, MousePointer2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ImpactedFacility } from '@/lib/simulation/model';
+import { disruptionLabels, type Disruption } from '@/lib/simulation/disruption';
 import { facilityStatusLabel } from './impact-display';
 import { OperationsDetails } from './operational-data';
 import { InventoryDetails } from './inventory-impact';
 export function FacilityDetails({
   facility,
   active,
+  disruption,
   onDismiss,
 }: {
   facility?: ImpactedFacility;
   active: boolean;
+  disruption?: Disruption;
   onDismiss: () => void;
 }) {
   return (
@@ -58,6 +61,25 @@ export function FacilityDetails({
             {facility.longitude.toFixed(4)}° longitude
           </p>
           <InventoryDetails facility={facility} />
+          {active &&
+            facility.impact &&
+            disruption &&
+            disruption.type !== 'facility-shutdown' && (
+              <p>
+                {disruptionLabels[disruption.type]} ·{' '}
+                {Math.round(
+                  (1 -
+                    (facility.impact.supplyAvailability ??
+                      (facility.status === 'disrupted' ? 0 : 1))) *
+                    100,
+                )}
+                % estimated flow unavailable
+                {disruption.type === 'shipment-delay'
+                  ? ` until Day ${disruption.durationDays}; flow then resumes`
+                  : ''}
+                .
+              </p>
+            )}
           <p>
             {!active
               ? 'No active disruption.'

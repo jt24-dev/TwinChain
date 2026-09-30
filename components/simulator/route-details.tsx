@@ -1,14 +1,17 @@
 import { Button } from '@/components/ui/button';
 import type { ImpactedRoute, ImpactedFacility } from '@/lib/simulation/model';
+import { disruptionLabels, type Disruption } from '@/lib/simulation/disruption';
 import { OperationsDetails } from './operational-data';
 import { RouteModeIndicator } from './route-mode-indicator';
 export function RouteDetails({
   route,
   facilities,
+  disruption,
   onDismiss,
 }: {
   route: ImpactedRoute;
   facilities: ImpactedFacility[];
+  disruption?: Disruption;
   onDismiss: () => void;
 }) {
   const name = (id: string) => facilities.find((f) => f.id === id)?.name ?? id;
@@ -33,6 +36,14 @@ export function RouteDetails({
         </span>
       </div>
       <OperationsDetails kind="route" data={route} />
+      {disruption?.type === 'route-closure' &&
+        disruption.routeId === route.id && (
+          <p>
+            {disruptionLabels[disruption.type]} · selected connection
+            unavailable for {disruption.durationDays} days. Other routes remain
+            available.
+          </p>
+        )}
       {route.alternate && <p>Selected alternate mitigation connection</p>}
     </aside>
   );

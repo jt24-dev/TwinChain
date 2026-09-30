@@ -13,6 +13,8 @@ export interface InventoryImpact {
   supplyAvailability: number;
   supplyBasis: 'route-count' | 'route-capacity' | 'sku-sourcing' | 'mitigation';
   disruptedSourceIds?: string[];
+  replenishmentDay?: number;
+  postWindowSupplyAvailability?: number;
   startingInventory?: number;
   dailyDemand?: number;
   coverageDays?: number;
@@ -152,8 +154,36 @@ export function applyInventoryImpact(
     result.facilities.map((facility) => [facility.id, facility]),
   );
   const routeById = new Map(result.routes.map((route) => [route.id, route]));
+  const partialFlow =
+    result.disruption && result.disruption.type !== 'facility-shutdown';
+  const delayWindow = result.disruption?.type === 'shipment-delay';
+  const routeSupply = (route: ImpactedRoute) =>
+    (route.supplyAvailability ?? 1) *
+    (sourceById.get(route.from)?.impact?.supplyAvailability ?? 1);
   const facilities = result.facilities.map((f) => {
-    if (!f.impact || f.impact.hops === 0) return f;
+    if (!f.impact || (!partialFlow && f.impact.hops === 0)) return f;
+    const incoming = inbound.get(f.id) ?? [];
+    const partialSupply =
+      f.impact.hops === 0 && result.disruption?.type !== 'route-closure'
+        ? (f.impact.supplyAvailability ?? 1)
+        : (() => {
+            const weighted =
+              incoming.length > 0 &&
+              incoming.every(
+                (r) => r.routeCapacity !== undefined && r.routeCapacity > 0,
+              );
+            const total = incoming.reduce(
+              (sum, r) => sum + (weighted ? r.routeCapacity! : 1),
+              0,
+            );
+            return total
+              ? incoming.reduce(
+                  (sum, r) =>
+                    sum + (weighted ? r.routeCapacity! : 1) * routeSupply(r),
+                  0,
+                ) / total
+              : 1;
+          })();
     const supply =
       f.mitigation?.supplyAvailability !== undefined
         ? {
@@ -163,39 +193,75 @@ export function applyInventoryImpact(
         : f.mitigation &&
             (f.mitigation.emergencyProtection || f.impact.severity === 'normal')
           ? { supplyAvailability: 1, supplyBasis: 'mitigation' as const }
-          : calculateSupplyAvailability(inbound.get(f.id) ?? []);
+          : partialFlow
+            ? {
+                supplyAvailability: partialSupply,
+                supplyBasis: 'route-count' as const,
+              }
+            : calculateSupplyAvailability(incoming);
     const records = recordsByFacility.get(f.id);
     if (!records?.length)
       return {
         ...f,
-        inventory: calculateInventoryImpact(f, durationDays, supply),
+        inventory: {
+          ...calculateInventoryImpact(f, durationDays, supply),
+          ...(delayWindow
+            ? {
+                replenishmentDay: durationDays,
+                postWindowSupplyAvailability: 1,
+              }
+            : {}),
+        },
       };
     const skuInventory = records.map((record) => {
       const sources = sourcingByPair.get(JSON.stringify([f.id, record.skuId]));
       if (!sources?.length)
         return {
           ...record,
-          projection: calculateInventoryImpact(record, durationDays, supply),
+          projection: {
+            ...calculateInventoryImpact(record, durationDays, supply),
+            ...(delayWindow
+              ? {
+                  replenishmentDay: durationDays,
+                  postWindowSupplyAvailability: 1,
+                }
+              : {}),
+          },
         };
       const equalShare = 1 / sources.length;
       const disruptedSourceIds: string[] = [];
       const available = sources.reduce((sum, source) => {
-        const sourceUnavailable =
-          sourceById.get(source.sourceFacilityId)?.status !== 'operational';
-        const routeUnavailable =
-          source.routeId !== undefined &&
-          routeById.get(source.routeId)?.status !== 'operational';
-        if (sourceUnavailable || routeUnavailable) {
+        const sourceFactor = partialFlow
+          ? (sourceById.get(source.sourceFacilityId)?.impact
+              ?.supplyAvailability ?? 1)
+          : sourceById.get(source.sourceFacilityId)?.status === 'operational'
+            ? 1
+            : 0;
+        const directRoutes = incoming.filter(
+          (route) => route.from === source.sourceFacilityId,
+        );
+        const routeFactor = partialFlow
+          ? source.routeId
+            ? (routeById.get(source.routeId)?.supplyAvailability ?? 1)
+            : Math.max(
+                0,
+                ...directRoutes.map((route) => route.supplyAvailability ?? 1),
+              )
+          : source.routeId &&
+              routeById.get(source.routeId)?.status !== 'operational'
+            ? 0
+            : 1;
+        const contribution = sourceFactor * routeFactor;
+        if (contribution < 0.999999) {
           disruptedSourceIds.push(source.sourceFacilityId);
-          return sum;
         }
-        return sum + (source.supplyShare ?? equalShare);
+        return sum + (source.supplyShare ?? equalShare) * contribution;
       }, 0);
       // Existing mitigation restores a fraction of the facility's lost flow. Apply
       // that fraction only to this SKU's unavailable sources; healthy SKUs stay whole.
-      const originalFacilityAvailability = calculateSupplyAvailability(
-        inbound.get(f.id) ?? [],
-      ).supplyAvailability;
+      const originalFacilityAvailability = partialFlow
+        ? partialSupply
+        : calculateSupplyAvailability(incoming).supplyAvailability;
       const recoveredFraction =
         f.mitigation && originalFacilityAvailability < 1
           ? Math.max(
@@ -213,11 +279,19 @@ export function applyInventoryImpact(
       );
       return {
         ...record,
-        projection: calculateInventoryImpact(record, durationDays, {
-          supplyAvailability,
-          supplyBasis: recoveredFraction ? 'mitigation' : 'sku-sourcing',
-          disruptedSourceIds,
-        }),
+        projection: {
+          ...calculateInventoryImpact(record, durationDays, {
+            supplyAvailability,
+            supplyBasis: recoveredFraction ? 'mitigation' : 'sku-sourcing',
+            disruptedSourceIds,
+          }),
+          ...(delayWindow
+            ? {
+                replenishmentDay: durationDays,
+                postWindowSupplyAvailability: 1,
+              }
+            : {}),
+        },
       };
     });
     const stockouts = skuInventory.filter(
@@ -232,6 +306,11 @@ export function applyInventoryImpact(
     // SKU records take precedence. Counts/earliest day do not combine incompatible quantities.
     const inventory: InventoryImpact = {
       ...supply,
+      supplyAvailability:
+        skuInventory.reduce(
+          (sum, record) => sum + record.projection.supplyAvailability,
+          0,
+        ) / skuInventory.length,
       state: stockouts.length ? 'stockout' : noData ? 'no-data' : 'protected',
       projectedStockoutDay: earliestStockoutDay,
     };
@@ -258,7 +337,7 @@ export function applyInventoryImpact(
     .filter(
       (f) =>
         f.impact &&
-        f.impact.hops > 0 &&
+        (partialFlow || f.impact.hops > 0) &&
         (f.inventory?.state === 'stockout' ||
           (f.inventory?.state === 'no-data' && f.status === 'at risk')),
     )
@@ -269,7 +348,7 @@ export function applyInventoryImpact(
     if (!f.impact) continue;
     const weight =
       f.impact.hops === 0
-        ? profile === 'custom'
+        ? profile === 'custom' && !partialFlow
           ? 3
           : 0
         : IMPACT_MODEL.severityWeight[

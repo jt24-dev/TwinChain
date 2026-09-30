@@ -1,5 +1,6 @@
 import type { SimulationResult, Severity } from './model.ts';
 import { calculateCustomImpact } from './facility-shutdown.ts';
+import { applyInventoryImpact } from './inventory.ts';
 import type { StrategyId } from './mitigation.ts';
 
 export type CustomMitigation =
@@ -30,11 +31,15 @@ export const customStrategyNames: Record<StrategyId, string> = {
 function exposed(result: SimulationResult, id: string) {
   const f = result.facilities.find((f) => f.id === id);
   return f?.impact &&
-    f.impact.hops > 0 &&
+    (f.impact.hops > 0 || originalIsPartial(result)) &&
     f.inventory &&
     f.inventory.supplyAvailability < 1
     ? f
     : undefined;
+}
+
+function originalIsPartial(result: SimulationResult) {
+  return result.disruption && result.disruption.type !== 'facility-shutdown';
 }
 
 // Reject alternate connections that would close a directed cycle. This is
@@ -86,7 +91,16 @@ export function applyCustomMitigation(
     );
   if (!original.active || choice.id === 'do-nothing') return original;
   const duration = original.inventorySummary?.durationDays;
-  if (!duration) throw new Error('Run a facility shutdown first.');
+  if (!duration) throw new Error('Run a disruption first.');
+  if (original.disruption?.type === 'capacity-reduction')
+    throw new Error('Mitigation for capacity reduction is not modeled yet.');
+  if (
+    original.disruption?.type === 'shipment-delay' &&
+    choice.id !== 'air-freight'
+  )
+    throw new Error('Only expedite is modeled for shipment delays.');
+  if (original.disruption?.type === 'route-closure' && choice.id !== 'reroute')
+    throw new Error('Only reroute is modeled for route closures.');
   const model = CUSTOM_MITIGATION_MODEL;
   let targetId: string, addedSupply: number, delay: number, premium: number;
   let alternateId: string | undefined;
@@ -192,16 +206,40 @@ export function applyCustomMitigation(
       },
     };
   });
-  const result = calculateCustomImpact(
-    {
-      ...original,
-      facilities,
-      routes: original.routes.map((r) =>
-        r.id === alternateId ? { ...r, alternate: true } : r,
-      ),
-    },
-    duration,
-  );
+  const modified = {
+    ...original,
+    facilities,
+    routes: original.routes.map((r) =>
+      r.id === alternateId ? { ...r, alternate: true } : r,
+    ),
+  };
+  const result =
+    original.disruption && original.disruption.type !== 'facility-shutdown'
+      ? applyInventoryImpact(
+          {
+            ...modified,
+            kpis: {
+              ...original.kpis,
+              leadTime: Math.max(
+                12,
+                Math.round(
+                  original.kpis.leadTime -
+                    (original.facilities.find((f) => f.id === targetId)!.impact!
+                      .additionalDelayDays -
+                      delay) /
+                      original.facilities.length,
+                ),
+              ),
+              serviceLevel: Math.min(
+                100,
+                Math.round(original.kpis.serviceLevel + 5 * addedSupply),
+              ),
+            },
+          },
+          duration,
+          'custom',
+        )
+      : calculateCustomImpact(modified, duration);
   // Preserve unmitigated operating penalties and add intervention spending.
   return {
     ...result,

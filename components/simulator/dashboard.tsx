@@ -27,7 +27,7 @@ import { useNetworkBuilder } from '@/lib/use-network-builder';
 import { normalNetworkView } from '@/lib/networks';
 import { NetworkBuilderPanel, NetworkName } from './network-builder';
 import { Button } from '@/components/ui/button';
-import { CustomShutdownControls } from './custom-shutdown-controls';
+import { CustomDisruptionControls } from './custom-shutdown-controls';
 import { NetworkImport } from './network-import';
 import { operationalCompleteness } from '@/lib/operations';
 import { InventorySummary } from './inventory-impact';
@@ -46,11 +46,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import {
-  customBaselineState,
-  runFacilityShutdown,
-  type FacilityShutdown,
-} from '@/lib/simulation/facility-shutdown';
+import { customBaselineState } from '@/lib/simulation/facility-shutdown';
+import { runDisruption, type Disruption } from '@/lib/simulation/disruption';
 import { useScenarios } from '@/lib/use-scenarios';
 import {
   createSavedScenario,
@@ -86,7 +83,7 @@ export function Dashboard() {
   const [active, setActive] = useState(false);
   const [customSelected, setCustomSelected] = useState<string | null>(null);
   const [shutdown, setShutdown] = useState<
-    (FacilityShutdown & { networkId: string }) | null
+    (Disruption & { networkId: string }) | null
   >(null);
   const [strategy, setStrategy] = useState<StrategyId>('do-nothing');
   const [customChoice, setCustomChoice] = useState<CustomMitigation>({
@@ -103,7 +100,11 @@ export function Dashboard() {
   }, []);
   const restoreScenarioInputs = useCallback((saved: SavedScenario) => {
     setMode('simulate');
-    setCustomSelected(saved.disruption.facilityId);
+    setCustomSelected(
+      saved.disruption.type === 'route-closure'
+        ? null
+        : saved.disruption.facilityId,
+    );
     setScenarioRevision((current) => current + 1);
     if (saved.networkId === 'demo' && saved.mitigation.kind === 'demo') {
       setActive(true);
@@ -177,7 +178,7 @@ export function Dashboard() {
       shutdown.networkId === network.id &&
       network.kind === 'custom' &&
       mode === 'simulate'
-        ? runFacilityShutdown(
+        ? runDisruption(
             network.facilities,
             network.routes,
             shutdown,
@@ -194,7 +195,7 @@ export function Dashboard() {
   );
   const scenarioContext:
     | {
-        disruption: FacilityShutdown;
+        disruption: Disruption;
         mitigation: SavedScenarioMitigation;
         result: typeof simulation;
       }
@@ -435,7 +436,7 @@ export function Dashboard() {
             Operational data: {enriched.facilities} of{' '}
             {network.facilities.length} facilities · {enriched.routes} of{' '}
             {network.routes.length} routes enriched · inventory data informs
-            shutdown projections
+            disruption projections
           </p>
           {library.storageError && (
             <p className="builder-error" role="alert">
@@ -455,7 +456,7 @@ export function Dashboard() {
                   ? 'Place facilities and connect directional routes on the map.'
                   : demoSimulation
                     ? 'Explore your network. Introduce a disruption. Understand the impact.'
-                    : 'Select a facility. Run a shutdown. Trace the downstream impact.'}
+                    : 'Choose a disruption. Trace its operational impact.'}
               </p>
             </div>
             <div className={`state-badge ${state.active ? 'disrupted' : ''}`}>
@@ -561,9 +562,10 @@ export function Dashboard() {
                 onReset={() => setDisruption(false)}
               />
             ) : (
-              <CustomShutdownControls
+              <CustomDisruptionControls
                 key={network.id}
                 facilities={network.facilities}
+                routes={network.routes}
                 selected={customSelected}
                 onSelect={setCustomSelected}
                 result={customSimulation}
@@ -590,7 +592,7 @@ export function Dashboard() {
               network.kind === 'custom' &&
               customDisruption.active && (
                 <CustomMitigationControls
-                  key={`${network.id}-${shutdown?.facilityId}-${shutdown?.durationDays}-${scenarioRevision}`}
+                  key={`${network.id}-${JSON.stringify(shutdown)}-${scenarioRevision}`}
                   original={customDisruption}
                   result={customSimulation}
                   choice={customChoice}
@@ -639,7 +641,7 @@ export function Dashboard() {
           </section>
           <footer>
             <span>
-              <span className="footer-dot" /> v0.18 · Client-side demo ·
+              <span className="footer-dot" /> v0.19 · Client-side demo ·
               Illustrative network & business impact
             </span>
             <span>RESILIENCE STARTS WITH VISIBILITY</span>

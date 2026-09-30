@@ -1,6 +1,7 @@
 import type { FacilityInventory, SkuSourcing } from '../sku-inventory.ts';
 import type { Facility, Route } from '../data/network.ts';
 import type { InventoryImpact, InventorySummary } from './inventory.ts';
+import type { Disruption } from './disruption.ts';
 
 export interface KPIs {
   serviceLevel: number;
@@ -34,6 +35,9 @@ export interface FacilityImpact {
   additionalDelayDays: number;
   sourceFacilityId: string;
   sourceName: string;
+  /** Fraction of expected flow available during the disruption window. */
+  supplyAvailability?: number;
+  disruptionType?: Disruption['type'];
 }
 export interface ImpactedFacility extends Facility {
   inventory?: InventoryImpact;
@@ -54,9 +58,11 @@ export interface ImpactedFacility extends Facility {
 }
 export interface ImpactedRoute extends Route {
   status: 'operational' | 'affected' | 'blocked';
+  supplyAvailability?: number;
   alternate?: boolean;
 }
 export interface SimulationResult {
+  disruption?: Disruption;
   inventorySummary?: InventorySummary;
   inventoryRecords?: FacilityInventory[];
   skuSourcing?: SkuSourcing[];

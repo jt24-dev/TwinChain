@@ -1,4 +1,10 @@
-# TwinChain · v0.18
+# TwinChain · v0.19
+
+## v0.19 Expanded Disruption Types
+
+Custom Networks now accept a serializable disruption input with a type, target, and 1–90 day duration. **Facility Shutdown** retains the existing closed-node behavior and Demo Shanghai results. **Shipment Delay** temporarily interrupts a facility's outbound supply for the selected delay window; inventory can run out before supply resumes at the window end. **Route Closure** blocks one selected route without automatically using an alternate connection. **Capacity Reduction** accepts **remaining capacity** from 0% (no capacity) to 100% (normal operation), reducing that facility's contribution proportionally. Non-shutdown effects travel downstream through directed routes; healthy inbound paths dilute the loss. This is an illustrative window-based estimate, not shipment tracking or a day-by-day replenishment schedule.
+
+For SKUs with explicit sourcing, the selected source and route determine the lost or delayed share. An unrelated SKU at the same destination can remain fully supplied. SKUs without sourcing retain facility/route-based fallback. The map distinguishes a closed route from an affected flow and labels the delay or reduced-capacity target; facility and SKU details show lost/remaining supply and projected stockout. Lead time reflects estimated delay; service and cost scale with exposure, duration, and disruption type. Custom mitigation keeps existing shutdown options, offers reroute for route closure and expedite for delay, and leaves capacity reduction at Do Nothing until a credible recovery model exists. Older shutdown scenario records reopen as Facility Shutdown. Scenario history/comparison identifies the disruption type.
 
 TwinChain is an interactive digital twin for building, importing, and stress-testing supply chain networks. Create a visual network or import Excel/CSV, add operational data, shut down any facility, and inspect cascading exposure, inventory depletion, projected stockouts and KPI impact. The illustrative Demo Network includes Shanghai mitigation comparison.
 
@@ -178,11 +184,11 @@ Choose **Create Route**, click the origin and destination facilities, choose tra
 
 Custom networks save automatically in this browser's localStorage, including names, coordinates, routes, and the last selected network. The network selector reopens saved networks. Storage is local to this browser and origin, with JSON backup/restore but no account, cloud sync, or undo. Storage failures show a warning; invalid saved data is left untouched rather than overwritten. Clearing browser storage removes custom networks.
 
-**Demo Network** is protected from builder edits and retains its 14 facilities, 13 routes, Shanghai scenario, KPIs, mitigations, and comparison. Custom networks now support Facility Shutdown in **Simulate** mode.
+**Demo Network** is protected from builder edits and retains its 14 facilities, 13 routes, Shanghai scenario, KPIs, mitigations, and comparison. Custom networks support the four v0.19 disruption types in **Simulate** mode.
 
 ## Generalized Custom Disruption Simulation
 
-Build your network, switch to **Simulate**, select any facility on the map or in the shutdown dropdown, choose 7, 14, 21, 30, 60, or 90 days, and select **Run shutdown**. Inspect affected facilities for risk, source, hops, and estimated delay. **Reset to baseline** clears the result while preserving your network, camera, and selection. Entering Build mode also clears the shutdown. Refresh saves only the network structure, never an active scenario.
+Build your network, switch to **Simulate**, choose a disruption type and its relevant facility or route target, enter 1–90 days, and select **Run disruption**. Inspect affected facilities for risk, source, hops, supply availability, and estimated delay. **Reset to baseline** clears the result while preserving your network, camera, and selection. Entering Build mode also clears the disruption. Refresh saves only the network structure, never an active scenario.
 
 Shanghai and custom shutdowns use the same directed breadth-first traversal through `lib/simulation/facility-shutdown.ts`. The source is disrupted; downstream facilities receive high risk at one hop, medium at two, and low at three or more. Direct dependencies receive the shutdown duration as delay; each additional hop retains 65%, rounded to whole days. Routes touching the closed facility are blocked; other routes leaving reached facilities are affected. Upstream facilities stay normal unless a directed cycle reaches them. Cycles are visited once at the shortest distance; disconnected components stay unaffected. Terminal and isolated shutdowns are valid, localized scenarios.
 
@@ -194,7 +200,7 @@ Custom KPI assumptions are centralized in `CUSTOM_MODEL` and `IMPACT_MODEL`:
 - **Lead time:** baseline plus mean additional delay across all network facilities (unaffected facilities contribute zero), rounded. The closed source's delay counts so localized shutdowns still have an impact.
 - **Cost:** baseline plus daily penalties of $4,000 per blocked route, $2,000 per affected route, $500 per at-risk facility, and $500 for the closed facility, multiplied by duration.
 
-These are the topology-only formulas before the inventory adjustment above. They remain exact for networks without usable inventory data. More disconnected facilities dilute service and mean-delay exposure; they do not provide alternate supply. The public shutdown input validates whole days from 1 to 90. Mitigation remains demo-only; capacity-constrained simulation and custom mitigation are not modeled. Undo/redo remains deferred.
+These are the shutdown topology-only formulas before the inventory adjustment above. They remain exact for networks without usable inventory data. More disconnected facilities dilute service and mean-delay exposure; they do not provide alternate supply. The public disruption input validates whole days from 1 to 90. Custom mitigation remains limited to the compatible responses described in v0.19. Undo/redo remains deferred.
 
 Both modes use the same map renderer and `{ id, name, kind, facilities, routes }` network model. `lib/networks.ts` contains pure validation, immutable edits, and versioned persistence parsing; `lib/use-networks.ts` handles browser storage; `lib/use-network-builder.ts` handles editing gestures. `lib/map-projection.ts` shares placement and rendering coordinates. Simulation state is never saved into custom network data.
 

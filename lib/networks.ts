@@ -45,7 +45,7 @@ export const demoNetwork: SupplyNetwork = {
 };
 export type NetworkView = Pick<
   SimulationResult,
-  'active' | 'facilities' | 'routes'
+  'active' | 'facilities' | 'routes' | 'disruption'
 >;
 export function normalNetworkView(network: SupplyNetwork): NetworkView {
   return {

@@ -406,6 +406,7 @@ export function NetworkMap({
         <RouteDetails
           route={selectedRoute}
           facilities={state.facilities}
+          disruption={state.disruption}
           onDismiss={dismiss}
         />
       ) : (
@@ -413,6 +414,7 @@ export function NetworkMap({
           <FacilityDetails
             facility={selectedFacility}
             active={active}
+            disruption={state.disruption}
             onDismiss={dismiss}
           />
         )

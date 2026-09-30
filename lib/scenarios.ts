@@ -6,9 +6,11 @@ import {
   type CustomMitigation,
 } from './simulation/custom-mitigation.ts';
 import {
-  runFacilityShutdown,
-  type FacilityShutdown,
-} from './simulation/facility-shutdown.ts';
+  disruptionLabels,
+  parseDisruption,
+  runDisruption,
+  type Disruption,
+} from './simulation/disruption.ts';
 import { strategies, type StrategyId } from './simulation/mitigation.ts';
 import type { KPIs, SimulationResult } from './simulation/model.ts';
 
@@ -33,7 +35,7 @@ export interface SavedScenario {
   networkId: string;
   networkName: string;
   networkFingerprint: string;
-  disruption: FacilityShutdown;
+  disruption: Disruption;
   disruptedFacilityName: string;
   mitigation: SavedScenarioMitigation;
   mitigationName: string;
@@ -134,16 +136,7 @@ function parseScenario(value: unknown): SavedScenario {
   text(item.networkName, 'Scenario network name');
   text(item.networkFingerprint, 'Scenario network fingerprint');
   text(item.disruptedFacilityName, 'Disrupted facility name');
-  const disruption = item.disruption;
-  if (!disruption || disruption.type !== 'facility-shutdown')
-    throw new Error('Saved scenario has an unsupported disruption.');
-  text(disruption.facilityId, 'Disrupted facility ID');
-  if (
-    !Number.isInteger(disruption.durationDays) ||
-    disruption.durationDays < 1 ||
-    disruption.durationDays > 90
-  )
-    throw new Error('Saved scenario duration must be 1–90 whole days.');
+  const disruption = parseDisruption(item.disruption);
   const mitigation = item.mitigation;
   let parsedMitigation: SavedScenarioMitigation;
   if (mitigation?.kind === 'demo') {
@@ -194,11 +187,7 @@ function parseScenario(value: unknown): SavedScenario {
     networkId: item.networkId,
     networkName: item.networkName,
     networkFingerprint: item.networkFingerprint,
-    disruption: {
-      type: 'facility-shutdown',
-      facilityId: disruption.facilityId,
-      durationDays: disruption.durationDays,
-    },
+    disruption,
     disruptedFacilityName: item.disruptedFacilityName,
     mitigation: parsedMitigation,
     mitigationName: expectedMitigationName,
@@ -296,7 +285,7 @@ export function createSavedScenario({
   name: string;
   createdAt: string;
   network: SupplyNetwork;
-  disruption: FacilityShutdown;
+  disruption: Disruption;
   mitigation: SavedScenarioMitigation;
   result: SimulationResult;
 }) {
@@ -307,10 +296,20 @@ export function createSavedScenario({
     (network.kind === 'custom' && mitigation.kind !== 'custom')
   )
     throw new Error('Scenario mitigation does not match its network.');
-  const facility = network.facilities.find(
-    (item) => item.id === disruption.facilityId,
-  );
-  if (!facility) throw new Error('The disrupted facility no longer exists.');
+  const input = parseDisruption(disruption);
+  const routeTarget =
+    input.type === 'route-closure'
+      ? network.routes.find((item) => item.id === input.routeId)
+      : undefined;
+  const facilityTarget =
+    input.type !== 'route-closure'
+      ? network.facilities.find((item) => item.id === input.facilityId)
+      : undefined;
+  if (!routeTarget && !facilityTarget)
+    throw new Error('The disruption target no longer exists.');
+  const targetName = routeTarget
+    ? `${network.facilities.find((f) => f.id === routeTarget.from)?.name ?? routeTarget.from} → ${network.facilities.find((f) => f.id === routeTarget.to)?.name ?? routeTarget.to}`
+    : facilityTarget!.name;
   return parseScenario({
     id,
     name,
@@ -318,8 +317,8 @@ export function createSavedScenario({
     networkId: network.id,
     networkName: network.name,
     networkFingerprint: scenarioNetworkFingerprint(network),
-    disruption,
-    disruptedFacilityName: facility.name,
+    disruption: input,
+    disruptedFacilityName: targetName,
     mitigation,
     snapshot: {
       kpis: { ...result.kpis },
@@ -345,15 +344,23 @@ export function createSavedScenario({
 
 export function defaultScenarioName(
   network: SupplyNetwork,
-  disruption: FacilityShutdown,
+  disruption: Disruption,
   mitigation: SavedScenarioMitigation,
 ) {
-  const facility = network.facilities.find(
-    (item) => item.id === disruption.facilityId,
-  );
+  const routeTarget =
+    disruption.type === 'route-closure'
+      ? network.routes.find((item) => item.id === disruption.routeId)
+      : undefined;
+  const facilityTarget =
+    disruption.type !== 'route-closure'
+      ? network.facilities.find((item) => item.id === disruption.facilityId)
+      : undefined;
+  const targetName = routeTarget
+    ? `${network.facilities.find((f) => f.id === routeTarget.from)?.name ?? routeTarget.from} → ${network.facilities.find((f) => f.id === routeTarget.to)?.name ?? routeTarget.to}`
+    : (facilityTarget?.name ?? 'Target');
   const response = mitigationName(mitigation);
   const suffix = response && response !== 'Do Nothing' ? ` — ${response}` : '';
-  return `${facility?.name ?? 'Facility'} — ${disruption.durationDays} days${suffix}`;
+  return `${disruptionLabels[disruption.type]} · ${targetName} — ${disruption.durationDays} days${suffix}`;
 }
 
 export type ScenarioReproduction =
@@ -390,6 +397,7 @@ export function reproduceSavedScenario(
     if (network.kind === 'demo') {
       if (
         scenario.mitigation.kind !== 'demo' ||
+        scenario.disruption.type !== 'facility-shutdown' ||
         scenario.disruption.facilityId !==
           shanghaiClosure.disruptedFacilityId ||
         scenario.disruption.durationDays !== shanghaiClosure.durationDays
@@ -403,7 +411,7 @@ export function reproduceSavedScenario(
     }
     if (scenario.mitigation.kind !== 'custom')
       throw new Error('Saved Custom Network mitigation is invalid.');
-    const original = runFacilityShutdown(
+    const original = runDisruption(
       network.facilities,
       network.routes,
       scenario.disruption,
